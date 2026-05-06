@@ -1,176 +1,269 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Premios 9ª Compañía de Bomberos</title>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9ª Compañía Bomba Yungay - Antigüedad Efectiva</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:system-ui,sans-serif;background:#f4f4f4;padding:16px}
-  input,select{font-family:inherit}
-  button{font-family:inherit;cursor:pointer}
-  .spinner{border:3px solid #f0f0f0;border-top:3px solid #c0392b;border-radius:50%;width:30px;height:30px;animation:spin 1s linear infinite;margin:40px auto}
-  @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f0eb;min-height:100vh;display:flex;flex-direction:column}
+:root{--granate:#6B1D3A;--granate-light:#8B2D52;--granate-dark:#4A1228;--gold:#C9A84C;--gold-light:#E8D49A}
+.header{background:linear-gradient(135deg,var(--granate-dark) 0%,var(--granate) 50%,var(--granate-light) 100%);color:#fff;padding:20px 16px;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.logo{width:60px;height:60px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:24px;color:var(--granate-dark);border:3px solid var(--gold-light);flex-shrink:0}
+.header-text{flex:1;min-width:200px}
+.header-text h1{font-size:20px;font-weight:700;letter-spacing:1px;margin:0}
+.header-text .sub{font-size:13px;opacity:.9;letter-spacing:2px}
+.header-text .motto{font-size:11px;opacity:.7;margin-top:2px;font-style:italic}
+.header-right{text-align:right;font-size:12px;opacity:.8}
+.container{max-width:1100px;margin:0 auto;padding:16px;flex:1}
+.stats{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.stat-card{flex:1 1 150px;background:#fff;border-radius:10px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.stat-card .val{font-size:28px;font-weight:800}
+.stat-card .lbl{font-size:11px;color:#666;margin-top:2px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.controls input,.controls select{padding:10px 14px;border-radius:8px;border:2px solid var(--gold);font-size:13px;background:#fff;outline:none}
+.controls input{flex:1 1 200px;font-size:14px}
+.controls select{cursor:pointer}
+.count{font-size:12px;color:#888;margin-bottom:12px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:separate;border-spacing:0 4px;font-size:13px}
+thead tr{background:var(--granate);color:#fff;text-align:left}
+thead th{padding:10px 8px}
+thead th:first-child{border-radius:8px 0 0 8px}
+thead th:last-child{border-radius:0 8px 8px 0}
+tbody tr{background:#fff;cursor:pointer;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+tbody tr:hover{background:var(--gold-light)}
+tbody tr.selected{background:var(--gold-light);box-shadow:0 2px 8px rgba(107,29,58,.2)}
+tbody td{padding:10px 8px}
+tbody td:first-child{border-radius:8px 0 0 8px;font-weight:700;color:var(--granate)}
+tbody td:last-child{border-radius:0 8px 8px 0}
+.badge-premio{background:var(--granate);color:#fff;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:700;display:inline-block}
+.badge-prox{background:var(--gold);color:var(--granate-dark);padding:3px 10px;border-radius:12px;font-size:12px;font-weight:800;display:inline-block}
+.badge-vencido{background:#C0392B;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;white-space:nowrap;margin-left:6px}
+.empty{color:#aaa;font-size:11px}
+.obs{font-size:11px;color:#C0392B}
+.obs-empty{font-size:11px;color:#ccc;font-style:italic}
+.fecha-cell{display:flex;align-items:center;gap:6px}
+.footer{background:var(--granate-dark);color:rgba(255,255,255,.6);text-align:center;padding:14px 16px;font-size:11px}
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
 
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSqLRljt5-YIRnmZ3GkZmHYhF7l8MOmDRqOtE0r3JdJ9NoevqqnBKe5bhmEFP4ZRA/pub?gid=737417265&single=true&output=csv";
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">9ª</div>
+    <div class="header-text">
+      <h1>NOVENA COMPAÑÍA</h1>
+      <div class="sub">BOMBA YUNGAY — CBS</div>
+      <div class="motto">"Deber y Abnegación" · Fundada 4 de Junio de 1892</div>
+    </div>
+    <div class="header-right">Antigüedad Efectiva</div>
+  </div>
+</div>
 
-const hoy = new Date();
+<div class="container">
+  <div class="stats" id="stats"></div>
+  <div class="controls">
+    <input type="text" id="search" placeholder="🔍 Buscar voluntario...">
+    <select id="filter">
+      <option value="todos">Todos</option>
+      <option value="vencidos">Premios Vencidos</option>
+      <option value="sinPremio">Sin Premio Aún</option>
+      <option value="conObs">Con Observaciones</option>
+    </select>
+    <select id="sortBy">
+      <option value="numero">Ordenar por N°</option>
+      <option value="nombre">Ordenar por Nombre</option>
+      <option value="antiguedad">Ordenar por Antigüedad</option>
+    </select>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40px">N°</th>
+          <th>Voluntario</th>
+          <th>Antigüedad Efectiva</th>
+          <th style="text-align:center">Últ. Premio</th>
+          <th>Próximo Premio</th>
+          <th style="text-align:center">Años</th>
+          <th>Obs.</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
 
-function parseCSV(text){
-  const lines = text.split(/\r?\n/).filter(l => l.trim() !== "");
-  if (lines.length < 2) return [];
-  // Skip header
-  const rows = lines.slice(1);
-  return rows.map(line => {
-    const cols = line.split(";").map(c => c.trim());
-    const id = parseInt(cols[0]) || 0;
-    const nombre = cols[1] || "";
-    const ingreso = cols[2] || null;
-    const tiempo = cols[8] || "";
-    const ult_f = cols[10] || null;
-    const ult_p = cols[11] ? parseInt(cols[11]) : null;
-    const prox_f = cols[12] || null;
-    const prox_p = cols[13] ? parseInt(cols[13]) : null;
-    const obs = cols[14] || "";
-    return {
-      id, nombre, ingreso, tiempo,
-      ultimo_premio: ult_f || null,
-      ultimo_puntos: isNaN(ult_p) ? null : ult_p,
-      proximo_premio: prox_f || null,
-      proximo_puntos: isNaN(prox_p) ? null : prox_p,
-      obs
-    };
-  }).filter(v => v.nombre);
+<div class="footer">9ª Compañía "Bomba Yungay" · App by WRR 2026</div>
+
+<script>
+const DATA=[
+{n:1,nombre:"ACUÑA AGUSTÍN",tiempo:"38 años 8 meses 21 dias",ultimoPremio:35,fechaProx:"13-03-2027",proxPremio:40,obs:""},
+{n:2,nombre:"ACUÑA FRANCISCO",tiempo:"23 años 6 meses 11 dias",ultimoPremio:20,fechaProx:"23-10-2027",proxPremio:25,obs:""},
+{n:3,nombre:"AGUIRRE ALBERTO",tiempo:"38 años, 2 meses, 1 días",ultimoPremio:35,fechaProx:"02-06-2027",proxPremio:40,obs:""},
+{n:4,nombre:"AGUIRRE ALFREDO",tiempo:"37 años 4 meses 26 dias",ultimoPremio:35,fechaProx:"08-12-2028",proxPremio:40,obs:""},
+{n:5,nombre:"ALFARO PATRICIO",tiempo:"30 años, 4 meses, 18 días",ultimoPremio:30,fechaProx:"19-03-2030",proxPremio:35,obs:"Abonos"},
+{n:6,nombre:"ARRIOLA CHRISTOPHER",tiempo:"17 años 4 meses 26 dias",ultimoPremio:15,fechaProx:"08-12-2028",proxPremio:20,obs:""},
+{n:7,nombre:"ASTUDILLO RODRIGO",tiempo:"31 años 9 meses 6 dias",ultimoPremio:30,fechaProx:"28-07-2029",proxPremio:35,obs:""},
+{n:8,nombre:"BAHAMONDES OSCAR",tiempo:"0 años 4 meses 26 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:9,nombre:"BARROS VICENTE",tiempo:"5 años 3 meses 15 dias",ultimoPremio:null,fechaProx:"19-01-2031",proxPremio:10,obs:""},
+{n:10,nombre:"BECKER JUAN",tiempo:"14 años 8 meses 18 dias",ultimoPremio:10,fechaProx:"16-08-2026",proxPremio:15,obs:""},
+{n:11,nombre:"BENAVIDES ASAEL",tiempo:"0 años 4 meses 26 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:12,nombre:"BENCINI VICENTE",tiempo:"44 años, 6 meses, 30 días",ultimoPremio:40,fechaProx:"04-06-2026",proxPremio:45,obs:"Abonos"},
+{n:13,nombre:"BERRIOS EDUARDO",tiempo:"20 años, 11 meses, 11 días",ultimoPremio:20,fechaProx:"03-06-2030",proxPremio:25,obs:""},
+{n:14,nombre:"BRAVO ENRIQUE",tiempo:"22 años 9 meses 19 dias",ultimoPremio:20,fechaProx:"15-05-2028",proxPremio:25,obs:""},
+{n:15,nombre:"BRAVO DANTE",tiempo:"9 años 3 meses 8 dias",ultimoPremio:5,fechaProx:"26-01-2027",proxPremio:10,obs:""},
+{n:16,nombre:"BRAVO RODRIGO",tiempo:"5 años 5 meses 23 dias",ultimoPremio:5,fechaProx:"11-11-2030",proxPremio:10,obs:""},
+{n:17,nombre:"CABRERA A. ALEJANDRO",tiempo:"16 años 4 meses 26 dias",ultimoPremio:15,fechaProx:"08-12-2029",proxPremio:20,obs:""},
+{n:18,nombre:"CABRERA C. ALEJANDRO",tiempo:"17 años 8 meses 9 dias",ultimoPremio:15,fechaProx:"08-12-2028",proxPremio:20,obs:""},
+{n:19,nombre:"CAMACHO CARLOS",tiempo:"64 años 10 meses 4 dias",ultimoPremio:65,fechaProx:"25-05-2030",proxPremio:70,obs:""},
+{n:20,nombre:"CARREÑO EDUARDO",tiempo:"16 años, 0 meses, 20 días",ultimoPremio:15,fechaProx:"15-04-2030",proxPremio:20,obs:""},
+{n:21,nombre:"CHAVEZ FERNANDO",tiempo:"4 años 1 meses 11 dias",ultimoPremio:null,fechaProx:"23-03-2027",proxPremio:5,obs:""},
+{n:22,nombre:"CORREA WOLFGANG",tiempo:"0 años 4 meses 26 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:23,nombre:"DIAZ LEONEL",tiempo:"6 años 5 meses 28 dias",ultimoPremio:5,fechaProx:"06-11-2029",proxPremio:10,obs:""},
+{n:24,nombre:"ECHANES IGNACIO",tiempo:"6 años 5 meses 28 dias",ultimoPremio:5,fechaProx:"06-11-2029",proxPremio:10,obs:""},
+{n:25,nombre:"ELGUETA PABLO",tiempo:"1 años 0 meses 6 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:26,nombre:"ESPINOZA CHRISTIAN",tiempo:"0 años 4 meses 26 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:27,nombre:"ESPINOZA GERARDO",tiempo:"16 años 1 meses 10 dias",ultimoPremio:15,fechaProx:"24-03-2030",proxPremio:20,obs:""},
+{n:28,nombre:"FELIÚ MATÍAS",tiempo:"2 años 6 meses 21 dias",ultimoPremio:null,fechaProx:"13-10-2028",proxPremio:5,obs:""},
+{n:29,nombre:"FLORES LUKAS",tiempo:"4 años 6 meses 22 dias",ultimoPremio:null,fechaProx:"12-10-2026",proxPremio:5,obs:""},
+{n:30,nombre:"FRANKLIN MARTIN",tiempo:"0 años 11 meses 1 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:31,nombre:"FUENZALIDA ANGELO",tiempo:"13 años, 0 meses, 28 días",ultimoPremio:10,fechaProx:"03-04-2028",proxPremio:15,obs:""},
+{n:32,nombre:"GALASSI OSVALDO",tiempo:"17 años 11 meses 1 dias",ultimoPremio:15,fechaProx:"03-06-2028",proxPremio:20,obs:""},
+{n:33,nombre:"GALAZ DAVID",tiempo:"17 años, 0 meses, 13 días",ultimoPremio:15,fechaProx:"21-04-2029",proxPremio:20,obs:""},
+{n:34,nombre:"GARCÍA HERNÁN",tiempo:"20 años, 10 meses, 29 días",ultimoPremio:20,fechaProx:"03-06-2030",proxPremio:25,obs:""},
+{n:35,nombre:"GIACAMAN ENRIQUE",tiempo:"11 años 11 meses 1 dias",ultimoPremio:5,fechaProx:"30-06-2024",proxPremio:10,obs:"No Tiene Listas"},
+{n:36,nombre:"HENRIQUEZ EUGENIO",tiempo:"10 años, 11 meses, 23 días",ultimoPremio:10,fechaProx:"10-05-2030",proxPremio:15,obs:""},
+{n:37,nombre:"HERRERA MIGUEL",tiempo:"16 años, 4 meses, 10 días",ultimoPremio:15,fechaProx:"26-11-2029",proxPremio:20,obs:""},
+{n:38,nombre:"HIDALGO PATRICIO",tiempo:"33 años 0 meses 4 dias",ultimoPremio:30,fechaProx:"30-05-2027",proxPremio:35,obs:""},
+{n:39,nombre:"HIDALGO MAXIMILIANO",tiempo:"5 años 5 meses 23 dias",ultimoPremio:5,fechaProx:"11-11-2030",proxPremio:10,obs:""},
+{n:40,nombre:"HIDALGO ITALO",tiempo:"6 años, 8 meses, 30 días",ultimoPremio:5,fechaProx:"04-08-2029",proxPremio:10,obs:""},
+{n:41,nombre:"HOPPE CHRISTIAN",tiempo:"24 años 11 meses 11 dias",ultimoPremio:25,fechaProx:"23-05-2030",proxPremio:30,obs:"Abonos"},
+{n:42,nombre:"JARPA PABLO",tiempo:"15 años, 2 meses, 23 días",ultimoPremio:10,fechaProx:"14-02-2026",proxPremio:15,obs:""},
+{n:43,nombre:"LETELIER MANUEL",tiempo:"25 años 5 meses 26 dias",ultimoPremio:25,fechaProx:"08-11-2030",proxPremio:30,obs:""},
+{n:44,nombre:"LEWIN MARCIAL",tiempo:"59 años 9 meses 19 dias",ultimoPremio:null,fechaProx:null,proxPremio:0,obs:""},
+{n:45,nombre:"MANZUR HERNAN",tiempo:"18 años 3 meses 20 dias",ultimoPremio:15,fechaProx:"14-01-2028",proxPremio:20,obs:""},
+{n:46,nombre:"MARDONEZ PATRICIO",tiempo:"17 años, 9 meses, 24 días",ultimoPremio:15,fechaProx:"12-08-2028",proxPremio:20,obs:""},
+{n:47,nombre:"MARDONEZ JOAQUIN",tiempo:"3 años 3 meses 14 dias",ultimoPremio:null,fechaProx:"20-01-2028",proxPremio:5,obs:""},
+{n:48,nombre:"MARÍN HERNAN",tiempo:"41 años 3 meses 19 dias",ultimoPremio:40,fechaProx:"15-01-2030",proxPremio:45,obs:""},
+{n:49,nombre:"MEDINA FELIPE",tiempo:"4 años 4 meses 26 dias",ultimoPremio:null,fechaProx:"08-12-2026",proxPremio:5,obs:""},
+{n:50,nombre:"MOLINS FELIPE",tiempo:"11 años 11 meses 15 dias",ultimoPremio:10,fechaProx:"19-05-2029",proxPremio:15,obs:""},
+{n:51,nombre:"MUÑOZ ROBERTO",tiempo:"32 años 9 meses 27 dias",ultimoPremio:30,fechaProx:"07-05-2028",proxPremio:35,obs:""},
+{n:52,nombre:"NAVARRETE GUSTAVO",tiempo:"25 años 11 meses 1 dias",ultimoPremio:25,fechaProx:"03-06-2030",proxPremio:30,obs:""},
+{n:53,nombre:"NUÑEZ JOAO",tiempo:"26 años 4 meses 26 dias",ultimoPremio:20,fechaProx:"08-12-2024",proxPremio:25,obs:"No Tiene Listas"},
+{n:54,nombre:"NUÑEZ PABLO",tiempo:"27 años, 6 meses, 7 días",ultimoPremio:25,fechaProx:"30-12-2028",proxPremio:30,obs:""},
+{n:55,nombre:"NUÑEZ MIGUEL ANGEL",tiempo:"42 años 5 meses 25 dias",ultimoPremio:40,fechaProx:"07-06-2029",proxPremio:45,obs:""},
+{n:56,nombre:"OBREQUE NICOLAS",tiempo:"5 años 0 meses 6 dias",ultimoPremio:null,fechaProx:"28-04-2026",proxPremio:5,obs:""},
+{n:57,nombre:"OLGUÍN GUSTAVO",tiempo:"8 años 11 meses 1 dias",ultimoPremio:5,fechaProx:"03-06-2027",proxPremio:10,obs:""},
+{n:58,nombre:"ORELLLANA FELIPE",tiempo:"11 años 9 meses 4 dias",ultimoPremio:10,fechaProx:"30-07-2029",proxPremio:15,obs:""},
+{n:59,nombre:"ORMAZABAL MAXIMILIANO",tiempo:"4 años, 1 meses, 6 días",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:60,nombre:"PALACIOS MARTÍN",tiempo:"45 años 9 meses 20 dias",ultimoPremio:45,fechaProx:"07-06-2029",proxPremio:50,obs:""},
+{n:61,nombre:"PALMA R. CARLOS",tiempo:"10 años 11 meses 7 dias",ultimoPremio:10,fechaProx:"27-05-2030",proxPremio:15,obs:""},
+{n:62,nombre:"PALMA CARLOS",tiempo:"40 años, 10 meses, 21 días",ultimoPremio:40,fechaProx:"14-05-2030",proxPremio:45,obs:""},
+{n:63,nombre:"PÉREZ ELEODORO",tiempo:"69 años 7 meses 29 dias",ultimoPremio:65,fechaProx:"05-03-2026",proxPremio:70,obs:"Abonos"},
+{n:64,nombre:"PÉREZ ENRIQUE",tiempo:"14 años 4 meses 26 dias",ultimoPremio:5,fechaProx:"08-12-2021",proxPremio:10,obs:"No Tiene Listas"},
+{n:65,nombre:"PINO VÍCTOR",tiempo:"61 años 0 meses 20 dias",ultimoPremio:60,fechaProx:"14-10-2028",proxPremio:65,obs:"Abonos"},
+{n:66,nombre:"PINTO CRISTIAN",tiempo:"21 años, 9 meses, 8 días",ultimoPremio:20,fechaProx:"25-07-2029",proxPremio:25,obs:""},
+{n:67,nombre:"POZO SEBASTIAN",tiempo:"9 años, 7 meses, 11 días",ultimoPremio:5,fechaProx:"13-09-2026",proxPremio:10,obs:""},
+{n:68,nombre:"RAMOS WALDO",tiempo:"29 años 6 meses 4 dias",ultimoPremio:25,fechaProx:"30-05-2026",proxPremio:30,obs:"Abonos"},
+{n:69,nombre:"RAPOSO DANIEL",tiempo:"13 años, 3 meses, 22 días",ultimoPremio:10,fechaProx:"11-01-2028",proxPremio:15,obs:""},
+{n:70,nombre:"REES CHRISTIAN",tiempo:"0 años 4 meses 26 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:71,nombre:"REYES FELIPE",tiempo:"8 años 8 meses 7 dias",ultimoPremio:5,fechaProx:"27-08-2027",proxPremio:10,obs:""},
+{n:72,nombre:"RIQUELME GONZALO",tiempo:"14 años, 5 meses, 6 días",ultimoPremio:10,fechaProx:"20-11-2026",proxPremio:15,obs:""},
+{n:73,nombre:"RIQUELME MARCELO",tiempo:"19 años, 9 meses, 29 días",ultimoPremio:15,fechaProx:"04-07-2026",proxPremio:20,obs:""},
+{n:74,nombre:"RIQUELME VÍCTOR",tiempo:"26 años, 2 meses, 4 días",ultimoPremio:25,fechaProx:"03-03-2028",proxPremio:30,obs:""},
+{n:75,nombre:"RIQUELME FELIPE",tiempo:"12 años, 0 meses, 4 días",ultimoPremio:10,fechaProx:"29-09-2028",proxPremio:15,obs:""},
+{n:76,nombre:"RITZ JUAN",tiempo:"42 años, 6 meses, 10 días",ultimoPremio:null,fechaProx:null,proxPremio:5,obs:""},
+{n:77,nombre:"RIVERA ALONSO",tiempo:"10 años 11 meses 7 dias",ultimoPremio:10,fechaProx:"27-05-2030",proxPremio:15,obs:""},
+{n:78,nombre:"ROBERTS ARIEL",tiempo:"30 años 7 meses 7 dias",ultimoPremio:20,fechaProx:"27-09-2020",proxPremio:25,obs:"No Tiene Listas"},
+{n:79,nombre:"ROJAS JAIME",tiempo:"48 años 9 meses 20 dias",ultimoPremio:45,fechaProx:"14-04-2027",proxPremio:50,obs:""},
+{n:80,nombre:"ROMERO JOSÉ MARIO",tiempo:"49 años, 6 meses, 21 días",ultimoPremio:45,fechaProx:"16-10-2026",proxPremio:50,obs:""},
+{n:81,nombre:"RUZ CHRISTOPHER",tiempo:"1 años 7 meses 25 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:82,nombre:"SALINAS ANTONIO",tiempo:"6 años 11 meses 1 dias",ultimoPremio:5,fechaProx:"03-06-2029",proxPremio:10,obs:""},
+{n:83,nombre:"SANDIA SEBASTIAN",tiempo:"0 años 4 meses 26 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:84,nombre:"SANTELICES LEOPOLDO",tiempo:"42 años 5 meses 25 dias",ultimoPremio:40,fechaProx:"08-05-2027",proxPremio:45,obs:""},
+{n:85,nombre:"SORIANO IGNACIO",tiempo:"10 años 11 meses 7 dias",ultimoPremio:10,fechaProx:"27-05-2030",proxPremio:15,obs:""},
+{n:86,nombre:"SOTO BASTIAN",tiempo:"5 años 5 meses 23 dias",ultimoPremio:5,fechaProx:"11-11-2030",proxPremio:10,obs:""},
+{n:87,nombre:"SOTOMAYOR FRANCISCO",tiempo:"0 años 11 meses 1 dias",ultimoPremio:null,fechaProx:null,proxPremio:null,obs:""},
+{n:88,nombre:"SOTOMAYOR JAVIER",tiempo:"40 años 3 meses 29 dias",ultimoPremio:35,fechaProx:"05-03-2026",proxPremio:40,obs:""},
+{n:89,nombre:"SOTOMAYOR JUAN",tiempo:"43 años 6 meses 19 dias",ultimoPremio:40,fechaProx:"15-05-2027",proxPremio:45,obs:""},
+{n:90,nombre:"SOTOMAYOR SERGIO",tiempo:"27 años, 10 meses, 17 días",ultimoPremio:25,fechaProx:"07-07-2028",proxPremio:30,obs:""},
+{n:91,nombre:"SOTOMAYOR IGNACIO",tiempo:"10 años 7 meses 25 dias",ultimoPremio:10,fechaProx:"09-09-2030",proxPremio:15,obs:""},
+{n:92,nombre:"SUFAN RAFAEL",tiempo:"25 años, 4 meses, 12 días",ultimoPremio:25,fechaProx:"24-02-2024",proxPremio:30,obs:"No Tiene Listas"},
+{n:93,nombre:"TARDITO PIERO",tiempo:"24 años 11 meses 11 dias",ultimoPremio:20,fechaProx:"23-05-2026",proxPremio:25,obs:""},
+{n:94,nombre:"TIZNADO CARLOS",tiempo:"18 años, 7 meses, 6 días",ultimoPremio:15,fechaProx:"29-10-2027",proxPremio:20,obs:""},
+{n:95,nombre:"TORRES RODRIGO",tiempo:"28 años, 3 meses, 17 días",ultimoPremio:25,fechaProx:"02-06-2027",proxPremio:30,obs:""},
+{n:96,nombre:"TORRES CAMILO",tiempo:"30 años, 9 meses, 28 días",ultimoPremio:30,fechaProx:"05-07-2030",proxPremio:35,obs:""},
+{n:97,nombre:"TUPPER ALEXANDER",tiempo:"51 años 2 meses 24 dias",ultimoPremio:50,fechaProx:"10-02-2030",proxPremio:55,obs:""},
+{n:98,nombre:"VERGARA RUBEN",tiempo:"10 años 6 meses 6 dias",ultimoPremio:10,fechaProx:"28-10-2030",proxPremio:15,obs:""},
+{n:99,nombre:"VILLACURA PATRICIO",tiempo:"25 años 5 meses 26 dias",ultimoPremio:25,fechaProx:"08-11-2030",proxPremio:30,obs:""},
+{n:100,nombre:"VILLACURA ALEJANDRO",tiempo:"2 años 4 meses 12 dias",ultimoPremio:null,fechaProx:"22-12-2028",proxPremio:5,obs:""},
+{n:101,nombre:"VILLACURA VICENTE",tiempo:"2 años 4 meses 12 dias",ultimoPremio:null,fechaProx:"22-12-2028",proxPremio:5,obs:""},
+{n:102,nombre:"ZAMORA MARCO",tiempo:"18 años, 8 meses, 5 días",ultimoPremio:15,fechaProx:"27-08-2027",proxPremio:20,obs:""},
+{n:103,nombre:"ZAPATA SEBASTIAN",tiempo:"16 años 4 meses 26 dias",ultimoPremio:15,fechaProx:"08-12-2029",proxPremio:20,obs:""},
+{n:104,nombre:"ZAPATA GONZALO",tiempo:"10 años 11 meses 7 dias",ultimoPremio:10,fechaProx:"27-05-2030",proxPremio:15,obs:""}
+];
+
+function parseDate(s){if(!s)return null;const[d,m,y]=s.split("-");return new Date(+y,+m-1,+d)}
+function isVencido(s){const d=parseDate(s);return d?d<new Date():false}
+function parseYears(t){const m=t.match(/(\d+)\s*años/);return m?+m[1]:0}
+
+let selected=null;
+
+function renderStats(){
+  const total=DATA.length;
+  const vencidos=DATA.filter(b=>isVencido(b.fechaProx)).length;
+  const now=new Date(),oy=new Date(now.getFullYear()+1,now.getMonth(),now.getDate());
+  const proxYear=DATA.filter(b=>{const d=parseDate(b.fechaProx);return d&&d>=now&&d<=oy}).length;
+  document.getElementById("stats").innerHTML=[
+    {l:"Total Voluntarios",v:total,c:"var(--granate)"},
+    {l:"Premios Vencidos",v:vencidos,c:"#C0392B"},
+    {l:"Premios próx. 12 meses",v:proxYear,c:"var(--gold)"}
+  ].map(s=>`<div class="stat-card" style="border-left:4px solid ${s.c}"><div class="val" style="color:${s.c}">${s.v}</div><div class="lbl">${s.l}</div></div>`).join("");
 }
 
-function parseDate(str){if(!str||str==="N/A")return null;const p=str.split("-");if(p.length!==3)return null;return new Date(`${p[2]}-${p[1]}-${p[0]}`);}
-function diasRestantes(s){const d=parseDate(s);if(!d)return null;return Math.ceil((d-hoy)/86400000);}
-function estadoProximo(s){const d=diasRestantes(s);if(d===null)return{label:"Sin fecha",color:"#8b8b8b",bg:"#f0f0f0",key:"sin"};if(d<0)return{label:"Vencido",color:"#c0392b",bg:"#fdecea",key:"vencido"};if(d<=60)return{label:"Próximo",color:"#e67e22",bg:"#fff4e5",key:"proximo"};if(d<=180)return{label:"Este semestre",color:"#2980b9",bg:"#e8f4fd",key:"semestre"};return{label:"Al día",color:"#27ae60",bg:"#eafaf1",key:"aldia"};}
-function fmtFecha(s){if(!s||s==="N/A")return"—";return s;}
-
-function TiempoBar({tiempo}){
-  const m=tiempo&&tiempo.match(/(\d+)\s*año/);const a=m?parseInt(m[1]):0;
-  if(a>100)return null;
-  const pct=Math.min(100,(a/50)*100);
-  const color=a>=40?"#8e44ad":a>=25?"#c0392b":a>=15?"#2980b9":a>=10?"#27ae60":"#e67e22";
-  const cat=a>=40?"Gran Veterano":a>=25?"Veterano":a>=15?"Experimentado":a>=10?"Senior":"Activo";
-  return React.createElement("div",{style:{marginTop:6}},
-    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",fontSize:11,color:"#666",marginBottom:3}},
-      React.createElement("span",null,tiempo),React.createElement("span",{style:{color}},cat)),
-    React.createElement("div",{style:{background:"#e8e8e8",borderRadius:6,height:6,overflow:"hidden"}},
-      React.createElement("div",{style:{width:`${pct}%`,background:color,height:"100%",borderRadius:6}})));
+function render(){
+  const q=document.getElementById("search").value.toLowerCase();
+  const f=document.getElementById("filter").value;
+  const s=document.getElementById("sortBy").value;
+  let list=DATA.filter(b=>{
+    if(!b.nombre.toLowerCase().includes(q))return false;
+    if(f==="vencidos")return isVencido(b.fechaProx);
+    if(f==="sinPremio")return b.ultimoPremio===null;
+    if(f==="conObs")return b.obs&&b.obs.length>0;
+    return true;
+  });
+  list.sort((a,b)=>{
+    if(s==="nombre")return a.nombre.localeCompare(b.nombre);
+    if(s==="antiguedad")return parseYears(b.tiempo)-parseYears(a.tiempo);
+    return a.n-b.n;
+  });
+  document.getElementById("count").textContent=list.length+" voluntario"+(list.length!==1?"s":"")+" encontrado"+(list.length!==1?"s":"");
+  document.getElementById("tbody").innerHTML=list.map(b=>{
+    const v=isVencido(b.fechaProx);
+    const sel=selected===b.n;
+    return `<tr class="${sel?"selected":""}" onclick="toggleSelect(${b.n})">
+      <td>${b.n}</td>
+      <td style="font-weight:600">${b.nombre}</td>
+      <td style="font-size:12px;color:#555">${b.tiempo}</td>
+      <td style="text-align:center">${b.ultimoPremio!==null?`<span class="badge-premio">${b.ultimoPremio}</span>`:`<span class="empty">—</span>`}</td>
+      <td>${b.fechaProx?`<div class="fecha-cell"><span style="font-size:12px">${b.fechaProx}</span>${v?'<span class="badge-vencido">VENCIDO</span>':''}</div>`:`<span class="empty">—</span>`}</td>
+      <td style="text-align:center">${b.proxPremio!=null?`<span class="badge-prox">${b.proxPremio}</span>`:`<span class="empty">—</span>`}</td>
+      <td class="${b.obs?'obs':'obs-empty'}">${b.obs||"—"}</td>
+    </tr>`;
+  }).join("");
 }
 
-function Tarjeta({v,onClick}){
-  const est=estadoProximo(v.proximo_premio);const dias=diasRestantes(v.proximo_premio);
-  return React.createElement("div",{onClick:()=>onClick(v),style:{border:"1px solid #e0e0e0",borderRadius:12,padding:"14px 16px",cursor:"pointer",background:"#fff",borderLeft:`4px solid ${est.color}`,marginBottom:8}},
-    React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}},
-      React.createElement("div",null,
-        React.createElement("div",{style:{fontWeight:500,fontSize:14,color:"#1a1a1a"}},v.nombre,
-          v.obs==="Abonos"&&React.createElement("span",{style:{fontSize:10,background:"#8e44ad",color:"#fff",borderRadius:10,padding:"1px 7px",marginLeft:6}},"Abonos"),
-          v.obs==="No Tiene Listas"&&React.createElement("span",{style:{fontSize:10,background:"#c0392b",color:"#fff",borderRadius:10,padding:"1px 7px",marginLeft:6}},"Sin Listas")),
-        React.createElement("div",{style:{fontSize:11,color:"#999",marginTop:1}},`N°${v.id} · Ingreso: ${fmtFecha(v.ingreso)}`)),
-      React.createElement("span",{style:{background:est.bg,color:est.color,borderRadius:20,padding:"3px 10px",fontSize:11,fontWeight:500}},est.label)),
-    v.tiempo&&React.createElement(TiempoBar,{tiempo:v.tiempo}),
-    React.createElement("div",{style:{display:"flex",flexWrap:"wrap",gap:"6px 16px",marginTop:8,fontSize:12,color:"#555"}},
-      React.createElement("span",null,"🏅 Último: ",React.createElement("b",null,fmtFecha(v.ultimo_premio)),v.ultimo_puntos?` (${v.ultimo_puntos} pts)`:""),
-      React.createElement("span",null,"📅 Próximo: ",React.createElement("b",null,fmtFecha(v.proximo_premio)),v.proximo_puntos?` (${v.proximo_puntos} pts)`:""),
-      dias!==null&&React.createElement("span",{style:{color:est.color,fontWeight:500,marginLeft:"auto"}},dias<0?`Hace ${Math.abs(dias)}d`:dias===0?"¡Hoy!":`En ${dias}d`)));
-}
+function toggleSelect(n){selected=selected===n?null:n;render()}
 
-function Modal({v,onClose}){
-  const est=estadoProximo(v.proximo_premio);const dias=diasRestantes(v.proximo_premio);
-  return React.createElement("div",{style:{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:1000},onClick:e=>e.target===e.currentTarget&&onClose()},
-    React.createElement("div",{style:{background:"#fff",borderRadius:16,padding:26,width:"min(95vw,500px)",maxHeight:"90vh",overflowY:"auto"}},
-      React.createElement("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}},
-        React.createElement("div",null,React.createElement("h2",{style:{margin:0,fontSize:16,fontWeight:500}},v.nombre),React.createElement("div",{style:{fontSize:12,color:"#999"}},`N°${v.id} · Ingreso: ${fmtFecha(v.ingreso)}`)),
-        React.createElement("button",{onClick:onClose,style:{border:"none",background:"none",fontSize:22,cursor:"pointer",color:"#aaa"}},"✕")),
-      v.tiempo&&React.createElement("div",{style:{background:"#f8f8f8",borderRadius:10,padding:14,marginBottom:16}},
-        React.createElement("div",{style:{fontSize:12,color:"#777",marginBottom:2}},"Tiempo de servicio"),
-        React.createElement("div",{style:{fontSize:18,fontWeight:500}},v.tiempo),
-        React.createElement(TiempoBar,{tiempo:v.tiempo})),
-      React.createElement("div",{style:{display:"grid",gap:10}},
-        [["Último premio — fecha",fmtFecha(v.ultimo_premio)],["Último premio — puntos",v.ultimo_puntos||"—"],["Próxima calificación — fecha",fmtFecha(v.proximo_premio)],["Próxima calificación — puntos",v.proximo_puntos||"—"],["Observaciones",v.obs||"—"]].map(([label,val])=>
-          React.createElement("div",{key:label,style:{display:"flex",justifyContent:"space-between",padding:"6px 0",borderBottom:"1px solid #f0f0f0"}},
-            React.createElement("span",{style:{fontSize:13,color:"#666"}},label),
-            React.createElement("span",{style:{fontSize:13,fontWeight:500,color:"#1a1a1a"}},val)))),
-      React.createElement("div",{style:{marginTop:14,padding:12,borderRadius:8,background:est.bg,color:est.color,fontSize:13}},
-        "Estado: ",React.createElement("b",null,est.label),dias!==null&&` — ${dias<0?`vencido hace ${Math.abs(dias)} días`:`en ${dias} días`}`)));
-}
-
-function App(){
-  const [voluntarios,setVoluntarios]=React.useState([]);
-  const [cargando,setCargando]=React.useState(true);
-  const [error,setError]=React.useState(null);
-  const [ultActualizacion,setUltActualizacion]=React.useState(null);
-  const [busqueda,setBusqueda]=React.useState("");
-  const [filtro,setFiltro]=React.useState("todos");
-  const [orden,setOrden]=React.useState("proximo");
-  const [sel,setSel]=React.useState(null);
-
-  const cargarDatos = React.useCallback(()=>{
-    setCargando(true);
-    setError(null);
-    fetch(CSV_URL + "&t=" + Date.now())
-      .then(r=>{if(!r.ok)throw new Error("Error " + r.status);return r.text();})
-      .then(text=>{
-        const datos = parseCSV(text);
-        if(datos.length === 0) throw new Error("No se encontraron datos");
-        setVoluntarios(datos);
-        setUltActualizacion(new Date());
-        setCargando(false);
-      })
-      .catch(err=>{setError(err.message);setCargando(false);});
-  },[]);
-
-  React.useEffect(()=>{cargarDatos();},[cargarDatos]);
-
-  const resumen=React.useMemo(()=>{const c={total:voluntarios.length,vencido:0,proximo:0,semestre:0,sin:0};voluntarios.forEach(v=>{const k=estadoProximo(v.proximo_premio).key;if(c[k]!==undefined)c[k]++;});return c;},[voluntarios]);
-  const filtrados=React.useMemo(()=>{let arr=voluntarios.filter(v=>v.nombre.toLowerCase().includes(busqueda.toLowerCase()));if(filtro!=="todos")arr=arr.filter(v=>estadoProximo(v.proximo_premio).key===filtro);return [...arr].sort((a,b)=>{if(orden==="proximo"){const da=parseDate(a.proximo_premio)||new Date("9999-01-01");const db=parseDate(b.proximo_premio)||new Date("9999-01-01");return da-db;}if(orden==="nombre")return a.nombre.localeCompare(b.nombre);return a.id-b.id;});},[voluntarios,busqueda,filtro,orden]);
-  const FILTROS=[{key:"todos",label:`Todos (${resumen.total})`,color:"#555"},{key:"vencido",label:`Vencidos (${resumen.vencido})`,color:"#c0392b"},{key:"proximo",label:`Próximos 60d (${resumen.proximo})`,color:"#e67e22"},{key:"semestre",label:`6 meses (${resumen.semestre})`,color:"#2980b9"},{key:"sin",label:`Sin fecha (${resumen.sin})`,color:"#8b8b8b"}];
-
-  return React.createElement("div",{style:{maxWidth:700,margin:"0 auto",padding:"18px 14px"}},
-    React.createElement("div",{style:{display:"flex",alignItems:"center",gap:12,marginBottom:4}},
-      React.createElement("div",{style:{fontSize:30}},"🚒"),
-      React.createElement("div",{style:{flex:1}},
-        React.createElement("h1",{style:{margin:0,fontSize:19,fontWeight:500}},"Premios 9ª Compañía"),
-        React.createElement("div",{style:{fontSize:11,color:"#999"}},
-          "Conectado a Google Sheets · ",hoy.toLocaleDateString("es-CL",{day:"numeric",month:"long",year:"numeric"}),
-          ultActualizacion&&React.createElement("span",{style:{marginLeft:6,color:"#27ae60"}},"● actualizado " + ultActualizacion.toLocaleTimeString("es-CL",{hour:"2-digit",minute:"2-digit"})))),
-      React.createElement("button",{onClick:cargarDatos,disabled:cargando,style:{padding:"6px 12px",border:"1px solid #ddd",borderRadius:8,background:"#fff",fontSize:12,cursor:cargando?"wait":"pointer",color:"#555"},title:"Recargar datos"},cargando?"⟳":"↻ Recargar")),
-
-    cargando&&voluntarios.length===0
-      ? React.createElement("div",{style:{textAlign:"center",padding:"40px 0"}},
-          React.createElement("div",{className:"spinner"}),
-          React.createElement("div",{style:{color:"#888",marginTop:10}},"Cargando datos desde Google Sheets..."))
-      : error
-      ? React.createElement("div",{style:{background:"#fdecea",color:"#c0392b",padding:16,borderRadius:10,marginTop:14,fontSize:13}},
-          React.createElement("b",null,"Error al cargar datos: "),error,
-          React.createElement("br"),
-          React.createElement("button",{onClick:cargarDatos,style:{marginTop:10,padding:"6px 14px",background:"#c0392b",color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontSize:12}},"Reintentar"))
-      : React.createElement(React.Fragment,null,
-          React.createElement("div",{style:{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,margin:"14px 0"}},
-            [{label:"Total",val:resumen.total,color:"#555",bg:"#f5f5f5"},{label:"Vencidos",val:resumen.vencido,color:"#c0392b",bg:"#fdecea"},{label:"Próximos 60d",val:resumen.proximo,color:"#e67e22",bg:"#fff4e5"},{label:"Próx. semestre",val:resumen.semestre,color:"#2980b9",bg:"#e8f4fd"}].map(({label,val,color,bg})=>
-              React.createElement("div",{key:label,style:{background:bg,borderRadius:10,padding:"10px",textAlign:"center"}},React.createElement("div",{style:{fontSize:26,fontWeight:500,color}},val),React.createElement("div",{style:{fontSize:11,color:"#777",marginTop:1}},label)))),
-          React.createElement("div",{style:{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}},
-            React.createElement("input",{placeholder:"Buscar por nombre...",value:busqueda,onChange:e=>setBusqueda(e.target.value),style:{flex:1,minWidth:150,padding:"8px 12px",border:"1px solid #ddd",borderRadius:8,fontSize:14}}),
-            React.createElement("select",{value:orden,onChange:e=>setOrden(e.target.value),style:{padding:"8px 10px",border:"1px solid #ddd",borderRadius:8,fontSize:13,background:"#fff"}},
-              React.createElement("option",{value:"proximo"},"Por próxima fecha"),React.createElement("option",{value:"nombre"},"Por nombre"),React.createElement("option",{value:"numero"},"Por N° registro"))),
-          React.createElement("div",{style:{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}},
-            FILTROS.map(f=>React.createElement("button",{key:f.key,onClick:()=>setFiltro(f.key),style:{padding:"5px 12px",borderRadius:20,border:"none",cursor:"pointer",fontSize:12,fontWeight:filtro===f.key?500:400,background:filtro===f.key?f.color:"#f0f0f0",color:filtro===f.key?"#fff":"#555"}},f.label))),
-          React.createElement("div",null,filtrados.length===0?React.createElement("div",{style:{textAlign:"center",color:"#bbb",padding:"40px 0"}},"Sin resultados"):filtrados.map(v=>React.createElement(Tarjeta,{key:v.id,v,onClick:setSel}))),
-          sel&&React.createElement(Modal,{v:sel,onClose:()=>setSel(null)})));
-}
-
-ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+renderStats();
+render();
+document.getElementById("search").addEventListener("input",render);
+document.getElementById("filter").addEventListener("change",render);
+document.getElementById("sortBy").addEventListener("change",render);
 </script>
 </body>
 </html>
