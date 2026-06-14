@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>9ª Compañía Bomba Yungay - Antigüedad Efectiva</title>
+<link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="logo">9ª</div>
+    <div class="header-text">
+      <h1>NOVENA COMPAÑÍA</h1>
+      <div class="sub">BOMBA YUNGAY — CBS</div>
+      <div class="motto">"Deber y Abnegación" · Fundada 4 de Junio de 1892</div>
+    </div>
+    <div class="header-right">
+      Antigüedad Efectiva
+      <a class="nav-link" href="./admin.html">Acceso Oficiales</a>
+    </div>
+  </div>
+</div>
+<div class="container">
+  <div class="stats" id="stats"></div>
+  <div class="controls">
+    <input type="text" id="search" placeholder="🔍 Buscar voluntario...">
+    <select id="filter">
+      <option value="todos">Todos</option>
+      <option value="vencidos">Premios Vencidos</option>
+      <option value="sinPremio">Sin Premio Aún</option>
+      <option value="conObs">Con Observaciones</option>
+    </select>
+    <select id="sortBy">
+      <option value="numero">Ordenar por N°</option>
+      <option value="nombre">Ordenar por Nombre</option>
+      <option value="antiguedad">Ordenar por Antigüedad</option>
+    </select>
+  </div>
+  <div class="count" id="count"></div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40px">N°</th>
+          <th>Voluntario</th>
+          <th>Antigüedad Efectiva</th>
+          <th style="text-align:center">Últ. Premio</th>
+          <th>Próximo Premio</th>
+          <th style="text-align:center">Años</th>
+          <th>Obs.</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div id="status" class="loading">Cargando datos…</div>
+</div>
+<div class="footer">9ª Compañía "Bomba Yungay" · App by WRR 2026 · Datos en tiempo real</div>
+<script type="module" src="./js/app.js"></script>
+</body>
+</html>
