@@ -1,22 +1,21 @@
 // === Vista pública: lee voluntarios desde Supabase y renderiza la tabla ===
-// La presentación es idéntica al diseño original; sólo cambia el origen de datos
-// (Supabase) y que la antigüedad / premios se calculan en vivo.
+// Muestra los valores tal como vienen de la planilla (antigüedad, último premio,
+// fecha del próximo premio = columna M, años del próximo premio). Diseño idéntico.
 import { supabase } from './supabase.js';
-import { calcular } from './calc.js';
+import { formatearISO, esVencido, parseAnios } from './calc.js';
 
-let REGISTROS = [];   // datos calculados, listos para mostrar
+let REGISTROS = [];
 let selected = null;
 
-function parseFechaProx(s) {
-  if (!s) return null;
-  const [d, m, y] = s.split('-').map(Number);
-  return new Date(y, m - 1, d);
+function parseFechaProx(iso) {
+  if (!iso) return null;
+  return new Date(iso + 'T00:00:00Z');
 }
 
 async function cargar() {
   const { data, error } = await supabase
     .from('voluntarios')
-    .select('numero, nombre, fecha_ingreso, abono_dias, ultimo_premio, obs')
+    .select('numero, nombre, tiempo_actual, premio_ant, fecha_prox_premio, prox_premio, obs')
     .eq('activo', true)
     .order('numero', { ascending: true });
 
@@ -28,20 +27,18 @@ async function cargar() {
   }
 
   const hoy = new Date();
-  REGISTROS = data.map((v) => {
-    const c = calcular(v, hoy);
-    return {
-      n: v.numero,
-      nombre: v.nombre,
-      tiempo: c.tiempo || '—',
-      ultimoPremio: c.ultimoPremio,
-      fechaProx: c.fechaProx,
-      proxPremio: c.proxPremio,
-      vencido: c.vencido,
-      anios: c.anios ?? 0,
-      obs: v.obs || '',
-    };
-  });
+  REGISTROS = data.map((v) => ({
+    n: v.numero,
+    nombre: v.nombre,
+    tiempo: v.tiempo_actual || '—',
+    ultimoPremio: v.premio_ant,
+    fechaProxISO: v.fecha_prox_premio,
+    fechaProx: formatearISO(v.fecha_prox_premio),
+    proxPremio: v.prox_premio,
+    vencido: esVencido(v.fecha_prox_premio, hoy),
+    anios: parseAnios(v.tiempo_actual),
+    obs: v.obs || '',
+  }));
 
   status.style.display = 'none';
   renderStats();
@@ -54,7 +51,7 @@ function renderStats() {
   const now = new Date();
   const oy = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
   const proxYear = REGISTROS.filter((b) => {
-    const d = parseFechaProx(b.fechaProx);
+    const d = parseFechaProx(b.fechaProxISO);
     return d && d >= now && d <= oy;
   }).length;
 
@@ -90,7 +87,7 @@ function render() {
   document.getElementById('tbody').innerHTML = list.map((b) => {
     const v = b.vencido;
     const sel = selected === b.n;
-    return `<tr class="${sel ? 'selected' : ''}" data-n="${b.n}"><td>${b.n}</td><td style="font-weight:600">${b.nombre}</td><td style="font-size:12px;color:#555">${b.tiempo}</td><td style="text-align:center">${b.ultimoPremio !== null ? `<span class="badge-premio">${b.ultimoPremio}</span>` : `<span class="empty">—</span>`}</td><td>${b.fechaProx ? `<div class="fecha-cell"><span style="font-size:12px">${b.fechaProx}</span>${v ? '<span class="badge-vencido">VENCIDO</span>' : ''}</div>` : `<span class="empty">—</span>`}</td><td style="text-align:center">${b.proxPremio != null ? `<span class="badge-prox">${b.proxPremio}</span>` : `<span class="empty">—</span>`}</td><td class="${b.obs ? 'obs' : 'obs-empty'}">${b.obs || '—'}</td></tr>`;
+    return `<tr class="${sel ? 'selected' : ''}" data-n="${b.n}"><td>${b.n}</td><td style="font-weight:600">${b.nombre}</td><td style="font-size:12px;color:#555">${b.tiempo}</td><td style="text-align:center">${b.ultimoPremio !== null && b.ultimoPremio !== undefined ? `<span class="badge-premio">${b.ultimoPremio}</span>` : `<span class="empty">—</span>`}</td><td>${b.fechaProx ? `<div class="fecha-cell"><span style="font-size:12px">${b.fechaProx}</span>${v ? '<span class="badge-vencido">VENCIDO</span>' : ''}</div>` : `<span class="empty">—</span>`}</td><td style="text-align:center">${b.proxPremio != null ? `<span class="badge-prox">${b.proxPremio}</span>` : `<span class="empty">—</span>`}</td><td class="${b.obs ? 'obs' : 'obs-empty'}">${b.obs || '—'}</td></tr>`;
   }).join('');
 
   document.querySelectorAll('#tbody tr').forEach((tr) => {

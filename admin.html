@@ -50,13 +50,14 @@
     </div>
 
     <div class="panel">
-      <h3>Importar voluntarios desde Excel / CSV</h3>
+      <h3>Actualizar datos desde la planilla</h3>
       <p class="hint">
-        Columnas reconocidas: <code class="inline">N°</code>, <code class="inline">Nombre</code>,
-        <code class="inline">Fecha Ingreso</code> (dd-mm-aaaa), <code class="inline">Abono Días</code> (opcional),
-        <code class="inline">Último Premio</code> (opcional), <code class="inline">Obs</code> (opcional).
-        La antigüedad y el próximo premio se calculan solos a partir de la fecha de ingreso.
-        <a href="#" id="tpl-link">Descargar plantilla CSV</a>
+        Sube tu planilla <code class="inline">Planilla Premios 9a Cia.xlsx</code> (o un CSV con las mismas
+        columnas). Se leen tal cual: <code class="inline">N°</code>, <code class="inline">Nombre</code>,
+        <code class="inline">Tiempo_Actual</code>, <code class="inline">Premio_Ant</code>,
+        <code class="inline">Fecha_Prox_Premio</code>, <code class="inline">Prox_Premio</code> y
+        <code class="inline">Observaciones</code>. La App muestra exactamente esos valores; al guardar,
+        la vista pública se actualiza.
       </p>
       <div class="dropzone" id="dropzone">
         📥 Arrastra aquí tu archivo <b>.xlsx</b> o <b>.csv</b><br>o haz clic para seleccionarlo

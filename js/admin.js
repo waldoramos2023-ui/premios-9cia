@@ -1,8 +1,9 @@
 // === Panel de administración ===
 // Login con Supabase Auth, verificación de admin (tabla bomba_admins vía RLS),
-// importación de Excel/CSV con previsualización y guardado (upsert) en la BD.
+// importación de la planilla Excel/CSV con previsualización y guardado (upsert).
+// La planilla es la fuente de verdad: se cargan sus columnas tal cual.
 import { supabase } from './supabase.js';
-import { calcular } from './calc.js';
+import { serialAISO, formatearISO, esVencido } from './calc.js';
 import * as XLSX from 'https://esm.sh/xlsx@0.18.5';
 
 const $ = (id) => document.getElementById(id);
@@ -10,9 +11,9 @@ const loginView = $('login-view');
 const adminView = $('admin-view');
 const boot = $('boot');
 
-let filasImportadas = []; // { numero, nombre, fecha_ingreso, abono_dias, ultimo_premio, obs, _estado, _error }
+let filasImportadas = [];
 
-// ---------- Utilidades de UI ----------
+// ---------- UI ----------
 function toast(msg, isErr = false) {
   const t = $('toast');
   t.textContent = msg;
@@ -46,7 +47,6 @@ async function refrescarVista() {
 
   const email = session.user.email;
   if (!(await esAdmin(email))) {
-    // Sesión válida pero sin permiso de admin
     loginView.style.display = 'block';
     adminView.style.display = 'none';
     loginMsg(`La cuenta <b>${email}</b> no está autorizada para administrar. Solicita acceso al encargado.`);
@@ -92,18 +92,22 @@ $('logout-btn').addEventListener('click', async () => {
   await refrescarVista();
 });
 
-// ---------- Importación de archivo ----------
+// ---------- Lectura de la planilla ----------
 function normKey(s) {
   return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
 }
 
+// Mapea cada campo de la BD a los posibles nombres de columna de la planilla.
 const ALIAS = {
   numero: ['n', 'no', 'num', 'numero', 'nro'],
   nombre: ['nombre', 'voluntario', 'nombres'],
-  fecha_ingreso: ['fechaingreso', 'fechadeingreso', 'ingreso', 'fecha'],
-  abono_dias: ['abonodias', 'abono', 'abonos', 'diasabono'],
-  ultimo_premio: ['ultimopremio', 'premio', 'ultpremio', 'ultimopremioaos'],
-  obs: ['obs', 'observacion', 'observaciones'],
+  tiempo_actual: ['tiempoactual', 'antiguedad', 'antiguedadefectiva', 'tiempo'],
+  fecha_ingreso: ['ingreso1', 'fechaingreso', 'ingreso'],
+  fecha_prem_ant: ['fechapremant', 'fechapremioanterior', 'fechapremioant'],
+  premio_ant: ['premioant', 'ultimopremio', 'ultpremio', 'premioanterior'],
+  fecha_prox_premio: ['fechaproxpremio', 'fechaproximopremio', 'proximopremiofecha'],
+  prox_premio: ['proxpremio', 'proximopremio', 'aniosproxpremio'],
+  obs: ['observaciones', 'obs', 'observacion'],
 };
 
 function mapearCabeceras(headerRow) {
@@ -111,22 +115,16 @@ function mapearCabeceras(headerRow) {
   headerRow.forEach((h, i) => {
     const k = normKey(h);
     for (const [campo, alias] of Object.entries(ALIAS)) {
-      if (alias.includes(k)) { map[campo] = i; break; }
+      if (map[campo] == null && alias.includes(k)) { map[campo] = i; break; }
     }
   });
   return map;
 }
 
-function serialAFecha(n) {
-  // Excel: día 0 = 1899-12-30 (UTC)
-  const ms = Math.round((n - 25569) * 86400 * 1000);
-  const d = new Date(ms);
-  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-}
-
-function parseFecha(v) {
+// Convierte una celda de fecha (serial de Excel o texto) a ISO.
+function celdaAFechaISO(v) {
   if (v == null || v === '') return null;
-  if (typeof v === 'number') return serialAFecha(v);
+  if (typeof v === 'number') return serialAISO(v);
   if (v instanceof Date) {
     return `${v.getFullYear()}-${String(v.getMonth() + 1).padStart(2, '0')}-${String(v.getDate()).padStart(2, '0')}`;
   }
@@ -144,6 +142,10 @@ function parseEntero(v) {
   return Number.isNaN(n) ? null : n;
 }
 
+function texto(v) {
+  return v == null ? '' : String(v).trim();
+}
+
 function procesarLibro(arrayBuffer) {
   const wb = XLSX.read(arrayBuffer, { type: 'array' });
   const ws = wb.Sheets[wb.SheetNames[0]];
@@ -151,34 +153,41 @@ function procesarLibro(arrayBuffer) {
   if (!rows.length) throw new Error('El archivo está vacío.');
 
   const map = mapearCabeceras(rows[0]);
-  if (map.numero == null || map.nombre == null || map.fecha_ingreso == null) {
-    throw new Error('Faltan columnas obligatorias. Se requieren al menos: N°, Nombre y Fecha Ingreso.');
+  if (map.numero == null || map.nombre == null) {
+    throw new Error('No se reconocieron las columnas. Se requiere al menos N° y Nombre.');
   }
 
   const out = [];
   for (let i = 1; i < rows.length; i++) {
     const r = rows[i];
     if (!r || r.every((c) => c == null || c === '')) continue;
+
     const numero = parseEntero(r[map.numero]);
-    const nombre = r[map.nombre] != null ? String(r[map.nombre]).trim() : '';
-    const fecha_ingreso = parseFecha(r[map.fecha_ingreso]);
-    const abono_dias = map.abono_dias != null ? (parseEntero(r[map.abono_dias]) ?? 0) : 0;
-    const ultimo_premio = map.ultimo_premio != null ? parseEntero(r[map.ultimo_premio]) : null;
-    const obs = map.obs != null && r[map.obs] != null ? String(r[map.obs]).trim() : '';
+    const nombre = texto(r[map.nombre]);
+    const reg = {
+      numero,
+      nombre,
+      tiempo_actual: map.tiempo_actual != null ? texto(r[map.tiempo_actual]) : '',
+      fecha_ingreso: map.fecha_ingreso != null ? celdaAFechaISO(r[map.fecha_ingreso]) : null,
+      fecha_prem_ant: map.fecha_prem_ant != null ? celdaAFechaISO(r[map.fecha_prem_ant]) : null,
+      premio_ant: map.premio_ant != null ? parseEntero(r[map.premio_ant]) : null,
+      fecha_prox_premio: map.fecha_prox_premio != null ? celdaAFechaISO(r[map.fecha_prox_premio]) : null,
+      prox_premio: map.prox_premio != null ? parseEntero(r[map.prox_premio]) : null,
+      obs: map.obs != null ? texto(r[map.obs]) : '',
+    };
 
     let error = null;
     if (numero == null) error = 'N° inválido';
     else if (!nombre) error = 'Nombre vacío';
-    else if (!fecha_ingreso) error = 'Fecha de ingreso inválida';
+    reg._error = error;
 
-    out.push({ numero, nombre, fecha_ingreso, abono_dias, ultimo_premio, obs, _error: error });
+    out.push(reg);
   }
   if (!out.length) throw new Error('No se encontraron filas de datos.');
   return out;
 }
 
 async function previsualizar(filas) {
-  // Marcar nuevos vs actualizaciones
   const { data: existentes } = await supabase.from('voluntarios').select('numero');
   const setExist = new Set((existentes || []).map((e) => e.numero));
 
@@ -203,28 +212,29 @@ function renderPreview() {
 
   const hoy = new Date();
   const filasHtml = filasImportadas.map((f) => {
-    const c = f._error ? null : calcular(f, hoy);
     const tag = f._estado === 'error'
       ? '<span class="row-tag tag-err">ERROR</span>'
       : f._estado === 'new'
         ? '<span class="row-tag tag-new">NUEVO</span>'
         : '<span class="row-tag tag-upd">ACTUALIZA</span>';
+    const fechaProx = formatearISO(f.fecha_prox_premio);
+    const venc = esVencido(f.fecha_prox_premio, hoy);
     return `<tr class="${f._estado === 'error' ? 'row-error' : f._estado === 'new' ? 'row-new' : ''}">
       <td>${tag}</td>
       <td>${f.numero ?? '—'}</td>
-      <td>${f.nombre || '—'}</td>
-      <td>${f.fecha_ingreso || '<span style="color:#C0392B">—</span>'}</td>
-      <td>${c ? c.tiempo : (f._error || '—')}</td>
-      <td style="text-align:center">${f.ultimo_premio ?? '—'}</td>
-      <td>${c ? c.fechaProx + (c.vencido ? ' ⚠️' : '') : '—'}</td>
+      <td>${f.nombre || (f._error || '—')}</td>
+      <td>${f.tiempo_actual || '—'}</td>
+      <td style="text-align:center">${f.premio_ant ?? '—'}</td>
+      <td>${fechaProx ? fechaProx + (venc ? ' ⚠️' : '') : '—'}</td>
+      <td style="text-align:center">${f.prox_premio ?? '—'}</td>
       <td>${f.obs || ''}</td>
     </tr>`;
   }).join('');
 
   $('preview-table').innerHTML = `
     <thead><tr>
-      <th>Estado</th><th>N°</th><th>Nombre</th><th>Fecha Ingreso</th>
-      <th>Antigüedad (calc.)</th><th>Últ. Premio</th><th>Próx. Premio (calc.)</th><th>Obs</th>
+      <th>Estado</th><th>N°</th><th>Nombre</th><th>Antigüedad</th>
+      <th>Últ. Premio</th><th>Próx. Premio (fecha)</th><th>Años</th><th>Obs</th>
     </tr></thead><tbody>${filasHtml}</tbody>`;
 
   $('save-btn').disabled = (nuevos + upd) === 0;
@@ -249,9 +259,12 @@ $('save-btn').addEventListener('click', async () => {
     .map((f) => ({
       numero: f.numero,
       nombre: f.nombre,
+      tiempo_actual: f.tiempo_actual || '',
       fecha_ingreso: f.fecha_ingreso,
-      abono_dias: f.abono_dias ?? 0,
-      ultimo_premio: f.ultimo_premio,
+      fecha_prem_ant: f.fecha_prem_ant,
+      premio_ant: f.premio_ant,
+      fecha_prox_premio: f.fecha_prox_premio,
+      prox_premio: f.prox_premio,
       obs: f.obs || '',
       activo: true,
     }));
@@ -291,17 +304,4 @@ dz.addEventListener('drop', (e) => {
   if (e.dataTransfer.files[0]) leerArchivo(e.dataTransfer.files[0]);
 });
 
-// Plantilla CSV
-$('tpl-link').addEventListener('click', (e) => {
-  e.preventDefault();
-  const csv = 'N°,Nombre,Fecha Ingreso,Abono Días,Último Premio,Obs\n105,EJEMPLO JUAN,15-03-2020,0,,\n';
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'plantilla-voluntarios.csv';
-  a.click();
-});
-
-// Mantener vista sincronizada con el estado de autenticación
-supabase.auth.onAuthStateChange(() => { /* refresco manual desde acciones */ });
 refrescarVista();

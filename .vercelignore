@@ -1,0 +1,10 @@
+# No publicar datos ni archivos de trabajo en el sitio
+*.xlsx
+*.xls
+*.csv
+scripts/
+node_modules/
+supabase/
+bomba-yungay-html.html
+README.md
+.git

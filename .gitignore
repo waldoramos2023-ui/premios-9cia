@@ -2,5 +2,13 @@ node_modules/
 .DS_Store
 .vercel
 *.log
+
+# Datos personales de voluntarios: NO versionar
+*.xlsx
+*.xls
+*.csv
+
+# Artefactos generados
 scripts/seed.sql
 scripts/update-premios.sql
+supabase/setup-novena-cia.sql

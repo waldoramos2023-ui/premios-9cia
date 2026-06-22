@@ -1,82 +1,34 @@
-// === Cálculo automático de antigüedad efectiva y premios ===
-// Reglas: los premios de antigüedad se otorgan cada 5 años (5, 10, 15, ...).
-// - antigüedad efectiva = hoy - (fecha de ingreso - abonos)
-// - próximo premio = siguiente múltiplo de 5 por sobre el último premio otorgado
-// - fecha del próximo premio = fecha de ingreso efectiva + (próximo premio) años
-// - vencido = la fecha del próximo premio ya pasó (corresponde pero aún no se otorga)
+// === Utilidades de presentación ===
+// La planilla Excel es la fuente de verdad (ya trae todo calculado: antigüedad,
+// fecha del próximo premio, etc.). Aquí solo formateamos/derivamos lo mínimo
+// para mostrar: formato de fecha, "vencido" y los años para ordenar.
 
-export const PASO_PREMIO = 5;
+// Convierte un número de serie de Excel a fecha ISO (YYYY-MM-DD).
+export function serialAISO(n) {
+  if (typeof n !== 'number' || !isFinite(n)) return null;
+  const d = new Date(Math.round((n - 25569) * 86400000));
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
 
-function parseISO(s) {
-  if (!s) return null;
-  const [y, m, d] = s.split('-').map(Number);
+// ISO (YYYY-MM-DD) -> dd-mm-aaaa para mostrar.
+export function formatearISO(iso) {
+  if (!iso) return null;
+  const [y, m, d] = iso.split('-');
   if (!y || !m || !d) return null;
-  return new Date(Date.UTC(y, m - 1, d));
+  return `${d.padStart(2, '0')}-${m.padStart(2, '0')}-${y}`;
 }
 
-// Fecha de ingreso ajustada por abonos (días que se suman a la antigüedad).
-function ingresoEfectivo(fechaIngreso, abonoDias) {
-  const d = parseISO(fechaIngreso);
-  if (!d) return null;
-  d.setUTCDate(d.getUTCDate() - (abonoDias || 0));
-  return d;
+// ¿La fecha del próximo premio ya pasó? (premio que corresponde y aún no se otorga)
+export function esVencido(iso, hoy = new Date()) {
+  if (!iso) return false;
+  const d = new Date(iso + 'T00:00:00Z');
+  const h = new Date(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
+  return d < h;
 }
 
-function addYears(date, years) {
-  const d = new Date(date.getTime());
-  d.setUTCFullYear(d.getUTCFullYear() + years);
-  return d;
-}
-
-// Desglose en años, meses y días entre dos fechas.
-function desglose(desde, hasta) {
-  let y = hasta.getUTCFullYear() - desde.getUTCFullYear();
-  let m = hasta.getUTCMonth() - desde.getUTCMonth();
-  let d = hasta.getUTCDate() - desde.getUTCDate();
-  if (d < 0) {
-    m--;
-    // días del mes anterior a 'hasta'
-    const diasMesAnt = new Date(Date.UTC(hasta.getUTCFullYear(), hasta.getUTCMonth(), 0)).getUTCDate();
-    d += diasMesAnt;
-  }
-  if (m < 0) { y--; m += 12; }
-  return { years: y, months: m, days: d };
-}
-
-export function formatearFecha(date) {
-  if (!date) return null;
-  const dd = String(date.getUTCDate()).padStart(2, '0');
-  const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const yy = date.getUTCFullYear();
-  return `${dd}-${mm}-${yy}`;
-}
-
-// Recibe una fila de la BD { fecha_ingreso, abono_dias, ultimo_premio, ... }
-// Devuelve los campos calculados para mostrar.
-export function calcular(v, hoy = new Date()) {
-  const hoyUTC = new Date(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
-  const ing = ingresoEfectivo(v.fecha_ingreso, v.abono_dias);
-  const ultimoPremio = v.ultimo_premio ?? null;
-
-  if (!ing) {
-    return { tiempo: null, anios: null, ultimoPremio, proxPremio: null, fechaProx: null, vencido: false };
-  }
-
-  const dg = desglose(ing, hoyUTC);
-  const tiempo = `${dg.years} años ${dg.months} meses ${dg.days} días`;
-
-  const base = ultimoPremio == null ? 0 : ultimoPremio;
-  const proxPremio = base + PASO_PREMIO;
-  const fechaProxDate = addYears(ing, proxPremio);
-  const vencido = fechaProxDate <= hoyUTC;
-
-  return {
-    tiempo,
-    anios: dg.years,
-    ultimoPremio,
-    proxPremio,
-    fechaProx: formatearFecha(fechaProxDate),
-    fechaProxDate,
-    vencido,
-  };
+// Extrae los años desde el texto de antigüedad ("38 años 9 meses..."), para ordenar.
+export function parseAnios(t) {
+  if (!t) return 0;
+  const m = String(t).match(/(\d+)\s*años?/i);
+  return m ? +m[1] : 0;
 }

@@ -29,17 +29,22 @@ vercel.json       Configuración de despliegue
 
 ## Base de datos (Supabase)
 
-Tabla `voluntarios`:
+La **planilla Excel es la fuente de verdad** (ya trae la antigüedad y las fechas
+calculadas). La app muestra esos valores tal cual y se refresca al importar una
+planilla nueva. Tabla `voluntarios` (refleja las columnas de la planilla):
 
-| Campo          | Tipo    | Descripción                                            |
-|----------------|---------|--------------------------------------------------------|
-| `numero`       | int     | N° del voluntario (único)                              |
-| `nombre`       | text    | Nombre                                                 |
-| `fecha_ingreso`| date    | Fecha de ingreso (base del cálculo de antigüedad)      |
-| `abono_dias`   | int     | Días de abono que se suman a la antigüedad (def. 0)    |
-| `ultimo_premio`| int     | Último premio otorgado en años (dato de las listas)    |
-| `obs`          | text    | Observaciones                                          |
-| `activo`       | bool    | Si se muestra en la vista pública                      |
+| Campo               | Col. planilla        | Descripción                          |
+|---------------------|----------------------|--------------------------------------|
+| `numero`            | A · N°               | N° del voluntario (único)            |
+| `nombre`            | B · Nombre           | Nombre                               |
+| `tiempo_actual`     | I · Tiempo_Actual    | Antigüedad efectiva (texto)          |
+| `fecha_ingreso`     | C · Ingreso_1        | Fecha de ingreso (referencia)        |
+| `fecha_prem_ant`    | K · Fecha_Prem_Ant   | Fecha del premio anterior            |
+| `premio_ant`        | L · Premio_Ant       | Último premio otorgado (años)        |
+| `fecha_prox_premio` | **M · Fecha_Prox_Premio** | **Fecha del próximo premio**    |
+| `prox_premio`       | N · Prox_Premio      | Próximo premio (años)                |
+| `obs`               | O · Observaciones    | Observaciones                        |
+| `activo`            | —                    | Si se muestra en la vista pública    |
 
 **Seguridad (RLS):** la lectura es pública; **solo correos en la tabla `bomba_admins`**
 (autenticados) pueden insertar/editar/eliminar.
