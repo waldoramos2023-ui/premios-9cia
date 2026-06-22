@@ -25,6 +25,8 @@ for (let i = 1; i < rows.length; i++) {
   if (!r || r[0] == null) continue;
   values.push(
     `(${sqlInt(r[0])}, ${sqlText(r[1])}, ${sqlText(r[8])}, ${sqlDate(serialToISO(r[2]))}, ` +
+    `${sqlDate(serialToISO(r[3]))}, ${sqlDate(serialToISO(r[4]))}, ${sqlDate(serialToISO(r[5]))}, ` +
+    `${sqlDate(serialToISO(r[6]))}, ${sqlDate(serialToISO(r[7]))}, ` +
     `${sqlDate(serialToISO(r[10]))}, ${sqlInt(r[11])}, ${sqlDate(serialToISO(r[12]))}, ${sqlInt(r[13])}, ${sqlText(r[14])})`
   );
 }
@@ -40,8 +42,13 @@ create table if not exists public.voluntarios (
   id                bigint generated always as identity primary key,
   numero            integer not null unique,
   nombre            text    not null,
-  tiempo_actual     text    not null default '',   -- col I: Tiempo_Actual (antigüedad efectiva)
+  tiempo_actual     text    not null default '',   -- col I: Tiempo_Actual (respaldo; la app la calcula en vivo)
   fecha_ingreso     date,                            -- col C: Ingreso_1
+  salida_1          date,                            -- col D: Salida_1
+  ingreso_2         date,                            -- col E: Ingreso_2
+  salida_2          date,                            -- col F: Salida_2
+  ingreso_3         date,                            -- col G: Ingreso_3
+  salida_3          date,                            -- col H: Salida_3
   fecha_prem_ant    date,                            -- col K: Fecha_Prem_Ant
   premio_ant        integer,                         -- col L: Premio_Ant (último premio otorgado)
   fecha_prox_premio date,                            -- col M: Fecha_Prox_Premio (LA fecha correcta)
@@ -108,12 +115,18 @@ on conflict (email) do nothing;
 
 -- 7) Carga de los 104 voluntarios (desde la planilla, 03/Junio/2026)
 insert into public.voluntarios
-  (numero, nombre, tiempo_actual, fecha_ingreso, fecha_prem_ant, premio_ant, fecha_prox_premio, prox_premio, obs) values
+  (numero, nombre, tiempo_actual, fecha_ingreso, salida_1, ingreso_2, salida_2, ingreso_3, salida_3,
+   fecha_prem_ant, premio_ant, fecha_prox_premio, prox_premio, obs) values
 ${values.join(',\n')}
 on conflict (numero) do update set
   nombre            = excluded.nombre,
   tiempo_actual     = excluded.tiempo_actual,
   fecha_ingreso     = excluded.fecha_ingreso,
+  salida_1          = excluded.salida_1,
+  ingreso_2         = excluded.ingreso_2,
+  salida_2          = excluded.salida_2,
+  ingreso_3         = excluded.ingreso_3,
+  salida_3          = excluded.salida_3,
   fecha_prem_ant    = excluded.fecha_prem_ant,
   premio_ant        = excluded.premio_ant,
   fecha_prox_premio = excluded.fecha_prox_premio,

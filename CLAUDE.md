@@ -17,12 +17,16 @@ No hay paso de compilación (no build). Es HTML/CSS/JS plano servido como estát
 1. **El diseño visual NO se cambia.** Colores, tipografías, tabla y layout son los del
    diseño original (`bomba-yungay-html.html`). Mantener `css/styles.css` intacto salvo
    añadidos que no alteren la presentación de la tabla.
-2. **NO mezclar con otros proyectos Supabase.** Esta app vive en su proyecto **dedicado y
-   aislado** `dwzpguzymqzytgkxiumz` ("Novena Cia CBS"). No usar ni tocar el proyecto
-   `frfqystvfskqxmvypljs` (es de otra app, "AsincPro Gastos").
-3. **La planilla Excel es la fuente de verdad.** La app **muestra** los valores tal cual;
-   **no recalcula** antigüedad ni fechas. Si algo se ve "mal", casi siempre es la planilla
-   o un despliegue desactualizado, no un cálculo.
+2. **El proyecto Supabase `dwzpguzymqzytgkxiumz` está COMPARTIDO con otras apps.** Sus tablas
+   `usuarios/rendiciones/items_rendicion` (rendición de fondos) e `inv_*` (inventario) son de
+   otras aplicaciones: **no tocarlas**. Esta app usa solo `voluntarios` y `bomba_admins`.
+   Además **`inv_bomberos.voluntario_id` referencia a `voluntarios.id`**: preservar `id` (el
+   upsert por `numero` lo respeta; añadir columnas nullable es seguro).
+3. **La planilla Excel es la fuente de verdad de los datos** (fechas de ingreso/salida, premios,
+   observaciones). La app los **muestra tal cual** y **no recalcula las fechas de premio**
+   (col M/N). **Excepción:** la **Antigüedad Efectiva** (col I) **se calcula en vivo** en el
+   cliente según la fecha actual, replicando la fórmula `DATEDIF`/`TODAY()` de la planilla
+   (ver `js/calc.js` → `calcularAntiguedad`). Por eso avanza sola sin reimportar.
 4. **Datos personales.** `Planilla Premios 9a Cia.xlsx` y cualquier `.csv/.xlsx` están en
    `.gitignore` y `.vercelignore`. Nunca versionar ni publicar datos de voluntarios.
 
@@ -58,9 +62,11 @@ vercel.json       Config de despliegue (cleanUrls, headers)
 - **Proyecto:** `dwzpguzymqzytgkxiumz` — URL `https://dwzpguzymqzytgkxiumz.supabase.co`.
 - **Llaves:** usar **publishable key** (`sb_publishable_...`). Las llaves *legacy* (`anon`
   con formato `eyJ...`) están **deshabilitadas** en este proyecto.
-- **Acceso desde aquí:** el asistente **no** tiene acceso por MCP a este proyecto. Los
-  cambios de base de datos se entregan como SQL para pegar en **Supabase → SQL Editor**
-  (ver `supabase/setup-novena-cia.sql`).
+- **Acceso desde aquí:** el asistente **sí** tiene acceso por MCP a este proyecto (aparece
+  listado como `fondos-rendicion`, pero el `ref` coincide con `js/config.js`). Se puede aplicar
+  migraciones y consultas por MCP — **siempre confirmando antes de escribir** y tocando solo
+  `voluntarios`/`bomba_admins`. También sigue siendo válido entregar SQL para el **SQL Editor**
+  (`supabase/setup-novena-cia.sql`).
 - **Seguridad (RLS):** lectura pública; escritura solo para correos en `bomba_admins`.
 - **Login admin:** Supabase Auth (correo + contraseña). El usuario debe existir en
   **Authentication** de este proyecto y su correo estar en `bomba_admins`.
@@ -72,8 +78,13 @@ vercel.json       Config de despliegue (cleanUrls, headers)
 |---------------------|---------------------------|--------------------------------|
 | `numero`            | A · N°                    | único                          |
 | `nombre`            | B · Nombre                |                                |
-| `tiempo_actual`     | I · Tiempo_Actual         | Antigüedad efectiva (texto)    |
-| `fecha_ingreso`     | C · Ingreso_1             | referencia                     |
+| `tiempo_actual`     | I · Tiempo_Actual         | Respaldo; la app la calcula en vivo |
+| `fecha_ingreso`     | C · Ingreso_1             | inicio del 1.er periodo        |
+| `salida_1`          | D · Salida_1              | periodos de servicio →         |
+| `ingreso_2`         | E · Ingreso_2             | para calcular antigüedad       |
+| `salida_2`          | F · Salida_2              | descontando bajas              |
+| `ingreso_3`         | G · Ingreso_3             |                                |
+| `salida_3`          | H · Salida_3              |                                |
 | `fecha_prem_ant`    | K · Fecha_Prem_Ant        |                                |
 | `premio_ant`        | L · Premio_Ant            | Últ. premio otorgado (años)    |
 | `fecha_prox_premio` | **M · Fecha_Prox_Premio** | **Fecha del Próximo Premio**   |

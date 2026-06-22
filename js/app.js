@@ -2,7 +2,7 @@
 // Muestra los valores tal como vienen de la planilla (antigüedad, último premio,
 // fecha del próximo premio = columna M, años del próximo premio). Diseño idéntico.
 import { supabase } from './supabase.js';
-import { formatearISO, esVencido, parseAnios } from './calc.js';
+import { formatearISO, esVencido, parseAnios, calcularAntiguedad } from './calc.js';
 
 let REGISTROS = [];
 let selected = null;
@@ -15,7 +15,8 @@ function parseFechaProx(iso) {
 async function cargar() {
   const { data, error } = await supabase
     .from('voluntarios')
-    .select('numero, nombre, tiempo_actual, premio_ant, fecha_prox_premio, prox_premio, obs')
+    .select('numero, nombre, tiempo_actual, premio_ant, fecha_prox_premio, prox_premio, obs, ' +
+            'fecha_ingreso, salida_1, ingreso_2, salida_2, ingreso_3, salida_3')
     .eq('activo', true)
     .order('numero', { ascending: true });
 
@@ -27,18 +28,23 @@ async function cargar() {
   }
 
   const hoy = new Date();
-  REGISTROS = data.map((v) => ({
-    n: v.numero,
-    nombre: v.nombre,
-    tiempo: v.tiempo_actual || '—',
-    ultimoPremio: v.premio_ant,
-    fechaProxISO: v.fecha_prox_premio,
-    fechaProx: formatearISO(v.fecha_prox_premio),
-    proxPremio: v.prox_premio,
-    vencido: esVencido(v.fecha_prox_premio, hoy),
-    anios: parseAnios(v.tiempo_actual),
-    obs: v.obs || '',
-  }));
+  REGISTROS = data.map((v) => {
+    // Antigüedad efectiva calculada en vivo (según la fecha actual). Si faltan fechas
+    // de ingreso, se respalda en el texto que venía de la planilla.
+    const antig = calcularAntiguedad(v, hoy);
+    return {
+      n: v.numero,
+      nombre: v.nombre,
+      tiempo: antig ? antig.texto : (v.tiempo_actual || '—'),
+      ultimoPremio: v.premio_ant,
+      fechaProxISO: v.fecha_prox_premio,
+      fechaProx: formatearISO(v.fecha_prox_premio),
+      proxPremio: v.prox_premio,
+      vencido: esVencido(v.fecha_prox_premio, hoy),
+      anios: antig ? antig.anios : parseAnios(v.tiempo_actual),
+      obs: v.obs || '',
+    };
+  });
 
   status.style.display = 'none';
   renderStats();

@@ -3,7 +3,7 @@
 // importación de la planilla Excel/CSV con previsualización y guardado (upsert).
 // La planilla es la fuente de verdad: se cargan sus columnas tal cual.
 import { supabase } from './supabase.js';
-import { serialAISO, formatearISO, esVencido } from './calc.js';
+import { serialAISO, formatearISO, esVencido, calcularAntiguedad } from './calc.js';
 import * as XLSX from 'https://esm.sh/xlsx@0.18.5';
 
 const $ = (id) => document.getElementById(id);
@@ -103,6 +103,11 @@ const ALIAS = {
   nombre: ['nombre', 'voluntario', 'nombres'],
   tiempo_actual: ['tiempoactual', 'antiguedad', 'antiguedadefectiva', 'tiempo'],
   fecha_ingreso: ['ingreso1', 'fechaingreso', 'ingreso'],
+  salida_1: ['salida1', 'salida'],
+  ingreso_2: ['ingreso2'],
+  salida_2: ['salida2'],
+  ingreso_3: ['ingreso3'],
+  salida_3: ['salida3'],
   fecha_prem_ant: ['fechapremant', 'fechapremioanterior', 'fechapremioant'],
   premio_ant: ['premioant', 'ultimopremio', 'ultpremio', 'premioanterior'],
   fecha_prox_premio: ['fechaproxpremio', 'fechaproximopremio', 'proximopremiofecha'],
@@ -169,6 +174,11 @@ function procesarLibro(arrayBuffer) {
       nombre,
       tiempo_actual: map.tiempo_actual != null ? texto(r[map.tiempo_actual]) : '',
       fecha_ingreso: map.fecha_ingreso != null ? celdaAFechaISO(r[map.fecha_ingreso]) : null,
+      salida_1: map.salida_1 != null ? celdaAFechaISO(r[map.salida_1]) : null,
+      ingreso_2: map.ingreso_2 != null ? celdaAFechaISO(r[map.ingreso_2]) : null,
+      salida_2: map.salida_2 != null ? celdaAFechaISO(r[map.salida_2]) : null,
+      ingreso_3: map.ingreso_3 != null ? celdaAFechaISO(r[map.ingreso_3]) : null,
+      salida_3: map.salida_3 != null ? celdaAFechaISO(r[map.salida_3]) : null,
       fecha_prem_ant: map.fecha_prem_ant != null ? celdaAFechaISO(r[map.fecha_prem_ant]) : null,
       premio_ant: map.premio_ant != null ? parseEntero(r[map.premio_ant]) : null,
       fecha_prox_premio: map.fecha_prox_premio != null ? celdaAFechaISO(r[map.fecha_prox_premio]) : null,
@@ -219,11 +229,14 @@ function renderPreview() {
         : '<span class="row-tag tag-upd">ACTUALIZA</span>';
     const fechaProx = formatearISO(f.fecha_prox_premio);
     const venc = esVencido(f.fecha_prox_premio, hoy);
+    // Mostrar la antigüedad recalculada (como en la vista pública); respaldo al texto crudo.
+    const antig = calcularAntiguedad(f, hoy);
+    const tiempo = antig ? antig.texto : (f.tiempo_actual || '—');
     return `<tr class="${f._estado === 'error' ? 'row-error' : f._estado === 'new' ? 'row-new' : ''}">
       <td>${tag}</td>
       <td>${f.numero ?? '—'}</td>
       <td>${f.nombre || (f._error || '—')}</td>
-      <td>${f.tiempo_actual || '—'}</td>
+      <td>${tiempo}</td>
       <td style="text-align:center">${f.premio_ant ?? '—'}</td>
       <td>${fechaProx ? fechaProx + (venc ? ' ⚠️' : '') : '—'}</td>
       <td style="text-align:center">${f.prox_premio ?? '—'}</td>
@@ -261,6 +274,11 @@ $('save-btn').addEventListener('click', async () => {
       nombre: f.nombre,
       tiempo_actual: f.tiempo_actual || '',
       fecha_ingreso: f.fecha_ingreso,
+      salida_1: f.salida_1,
+      ingreso_2: f.ingreso_2,
+      salida_2: f.salida_2,
+      ingreso_3: f.ingreso_3,
+      salida_3: f.salida_3,
       fecha_prem_ant: f.fecha_prem_ant,
       premio_ant: f.premio_ant,
       fecha_prox_premio: f.fecha_prox_premio,
