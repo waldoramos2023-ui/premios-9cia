@@ -4,7 +4,7 @@ body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#f5f0eb;
 :root{--granate:#6B1D3A;--granate-light:#8B2D52;--granate-dark:#4A1228;--gold:#C9A84C;--gold-light:#E8D49A}
 .header{background:linear-gradient(135deg,var(--granate-dark) 0%,var(--granate) 50%,var(--granate-light) 100%);color:#fff;padding:20px 16px;box-shadow:0 4px 12px rgba(0,0,0,.3)}
 .header-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
-.logo{width:60px;height:60px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:24px;color:var(--granate-dark);border:3px solid var(--gold-light);flex-shrink:0}
+.logo{height:72px;width:auto;object-fit:contain;flex-shrink:0}
 .header-text{flex:1;min-width:200px}
 .header-text h1{font-size:20px;font-weight:700;letter-spacing:1px;margin:0}
 .header-text .sub{font-size:13px;opacity:.9;letter-spacing:2px}
