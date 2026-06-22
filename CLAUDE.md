@@ -8,7 +8,8 @@ Sitio web estático que muestra la **antigüedad efectiva y los premios de const
 de los voluntarios de la 9ª Compañía del Cuerpo de Bomberos de Santiago.
 
 - **Vista pública** (`index.html`): cualquiera consulta, busca, filtra y ordena.
-- **Panel de oficiales** (`admin.html`): login + importar la planilla Excel/CSV.
+- **Panel de oficiales** (`admin.html`): login + importar la planilla Excel/CSV. **No** se
+  enlaza desde la vista pública; el acceso es directo por URL (`/admin`), de forma separada.
 
 No hay paso de compilación (no build). Es HTML/CSS/JS plano servido como estático.
 
@@ -35,12 +36,14 @@ No hay paso de compilación (no build). Es HTML/CSS/JS plano servido como estát
 ```
 index.html        Vista pública
 admin.html        Panel de administración (login + importación)
+escudo-9a.png     Escudo oficial (encabezado de ambas secciones)
 css/styles.css    Estilos (diseño original)
 js/
-  config.js       URL + publishable key del proyecto Supabase dedicado
+  config.js       URL + publishable key del proyecto Supabase
   supabase.js     Cliente Supabase (ESM vía CDN esm.sh)
-  calc.js         Utilidades de presentación (formato fecha, "vencido", parse años)
-  app.js          Vista pública: lee voluntarios y renderiza la tabla
+  calc.js         Presentación (formato fecha, "vencido") + cálculo de antigüedad en vivo
+                  (diffYMD, calcularAntiguedad)
+  app.js          Vista pública: lee voluntarios, calcula antigüedad y renderiza la tabla
   admin.js        Login + importador Excel/CSV (SheetJS vía CDN)
 scripts/          Generadores de SQL/seed (no se despliegan)
 supabase/         SQL de configuración del proyecto (no se despliega)
@@ -57,7 +60,7 @@ vercel.json       Config de despliegue (cleanUrls, headers)
   del proyecto. La historia placeholder que vivía antes en este remoto quedó guardada en
   `premios-9cia-remoto-original.bundle` y en la rama local `respaldo-remoto-premios9cia`.
 
-## Supabase (proyecto dedicado)
+## Supabase (proyecto compartido)
 
 - **Proyecto:** `dwzpguzymqzytgkxiumz` — URL `https://dwzpguzymqzytgkxiumz.supabase.co`.
 - **Llaves:** usar **publishable key** (`sb_publishable_...`). Las llaves *legacy* (`anon`
@@ -111,8 +114,12 @@ npm run dev      # http://localhost:5173 (o: npx serve, python3 -m http.server)
 npx vercel --prod --scope waldo-s-projects1
 ```
 
-> Tras desplegar, verificar con `curl` que `js/config.js` apunte al proyecto correcto y que
-> la vista muestre la fecha de columna M (p. ej. ACUÑA AGUSTÍN → 13-03-2027).
+> Tras desplegar, verificar con `curl` que `js/config.js` apunte al proyecto correcto, que
+> la vista muestre la fecha de columna M (p. ej. ACUÑA AGUSTÍN → 13-03-2027) y que `js/app.js`
+> sirva el cálculo en vivo (`calcularAntiguedad`).
+
+> **Versión actual:** v3.0 — encabezado con escudo oficial, antigüedad efectiva dinámica,
+> acceso a `/admin` separado de la vista pública. Pie: "Ver. 3.0 - by AsincPro · Actualizado ahora".
 
 ## Flujo para actualizar datos
 
