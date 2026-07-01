@@ -1,0 +1,55 @@
+# Mantiene "despierto" el proyecto Supabase para que no se pause por inactividad.
+# Supabase (plan free) pausa un proyecto tras ~7 días sin actividad. Este workflow
+# hace una consulta ligera de solo lectura a la tabla `voluntarios` dos veces por
+# semana (lunes y jueves), muy por debajo de ese límite.
+#
+# No necesita secretos: la URL y la "publishable key" se leen de js/config.js, que
+# ya es pública (RLS controla el acceso real). Si algún día cambia el proyecto, basta
+# con actualizar js/config.js y este workflow lo toma automáticamente.
+name: Keep-alive Supabase
+
+on:
+  schedule:
+    # Lunes y jueves a las 06:17 UTC (~02:17-03:17 en Chile). Minuto no-cero a propósito:
+    # GitHub recomienda evitar el tope de hora por congestión de los runners.
+    - cron: '17 6 * * 1,4'
+  workflow_dispatch: {} # permite ejecutarlo a mano desde la pestaña Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v4
+
+      - name: Consultar Supabase (mantener activo)
+        run: |
+          set -euo pipefail
+
+          # Extraer URL y llave publicable desde js/config.js (contenido entre comillas).
+          URL=$(grep SUPABASE_URL js/config.js | sed "s/.*'\(.*\)'.*/\1/")
+          KEY=$(grep SUPABASE_KEY js/config.js | sed "s/.*'\(.*\)'.*/\1/")
+
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then
+            echo "::error::No se pudo leer SUPABASE_URL/KEY desde js/config.js"
+            exit 1
+          fi
+
+          echo "Proyecto: $URL"
+
+          # Consulta mínima de solo lectura: toca Postgres a través de PostgREST,
+          # lo que cuenta como actividad y evita la pausa por inactividad.
+          CODE=$(curl -sS -o /tmp/resp.txt -w "%{http_code}" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            "$URL/rest/v1/voluntarios?select=numero&limit=1")
+
+          echo "HTTP $CODE"
+          echo "Respuesta: $(cat /tmp/resp.txt)"
+
+          if [ "$CODE" != "200" ]; then
+            echo "::error::Supabase no respondió 200 (HTTP $CODE). ¿Proyecto pausado o llave inválida?"
+            exit 1
+          fi
+
+          echo "✓ Supabase activo."
