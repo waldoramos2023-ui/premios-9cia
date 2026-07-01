@@ -71,6 +71,12 @@ vercel.json       Config de despliegue (cleanUrls, headers)
   `voluntarios`/`bomba_admins`. También sigue siendo válido entregar SQL para el **SQL Editor**
   (`supabase/setup-novena-cia.sql`).
 - **Seguridad (RLS):** lectura pública; escritura solo para correos en `bomba_admins`.
+- **Keep-alive (evitar pausa por inactividad):** el plan free pausa el proyecto tras ~7 días
+  sin actividad (síntoma: el host deja de resolver en DNS y la vista muestra "No se pudieron
+  cargar los datos"). Para evitarlo, el workflow `.github/workflows/keep-alive.yml` hace una
+  consulta ligera de solo lectura a `voluntarios` **lunes y jueves**. Lee URL/llave desde
+  `js/config.js` (no usa secretos). Si el proyecto igual se pausa, restaurarlo en el dashboard
+  de Supabase (Restore/Resume). Como el proyecto es compartido, una pausa afecta a las tres apps.
 - **Login admin:** Supabase Auth (correo + contraseña). El usuario debe existir en
   **Authentication** de este proyecto y su correo estar en `bomba_admins`.
   Admins actuales: `waldo.ramos@9.cbs.cl`, `waldo.ramos.2023@gmail.com`.
