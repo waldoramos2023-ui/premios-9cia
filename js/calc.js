@@ -26,6 +26,15 @@ export function esVencido(iso, hoy = new Date()) {
   return d < h;
 }
 
+// ¿El próximo premio vence dentro de los próximos 2 meses? (desde hoy inclusive)
+export function esPorVencer(iso, hoy = new Date(), meses = 2) {
+  if (!iso) return false;
+  const d = new Date(iso + 'T00:00:00Z');
+  const h = new Date(Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()));
+  const limite = new Date(Date.UTC(hoy.getFullYear(), hoy.getMonth() + meses, hoy.getDate()));
+  return d >= h && d <= limite;
+}
+
 // Extrae los años desde el texto de antigüedad ("38 años 9 meses..."), para ordenar.
 // Respaldo: solo se usa si no hay fechas para calcular en vivo.
 export function parseAnios(t) {

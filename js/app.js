@@ -2,7 +2,7 @@
 // Muestra los valores tal como vienen de la planilla (antigüedad, último premio,
 // fecha del próximo premio = columna M, años del próximo premio). Diseño idéntico.
 import { supabase } from './supabase.js';
-import { formatearISO, esVencido, parseAnios, calcularAntiguedad } from './calc.js';
+import { formatearISO, esVencido, esPorVencer, parseAnios, calcularAntiguedad } from './calc.js';
 
 let REGISTROS = [];
 let selected = null;
@@ -41,6 +41,7 @@ async function cargar() {
       fechaProx: formatearISO(v.fecha_prox_premio),
       proxPremio: v.prox_premio,
       vencido: esVencido(v.fecha_prox_premio, hoy),
+      porVencer: esPorVencer(v.fecha_prox_premio, hoy),
       anios: antig ? antig.anios : parseAnios(v.tiempo_actual),
       obs: v.obs || '',
     };
@@ -76,6 +77,7 @@ function render() {
   let list = REGISTROS.filter((b) => {
     if (!b.nombre.toLowerCase().includes(q)) return false;
     if (f === 'vencidos') return b.vencido;
+    if (f === 'porVencer') return b.porVencer;
     if (f === 'sinPremio') return b.ultimoPremio === null;
     if (f === 'conObs') return b.obs && b.obs.length > 0;
     return true;

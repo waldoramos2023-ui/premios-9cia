@@ -124,8 +124,10 @@ npx vercel --prod --scope waldo-s-projects1
 > la vista muestre la fecha de columna M (p. ej. ACUÑA AGUSTÍN → 13-03-2027) y que `js/app.js`
 > sirva el cálculo en vivo (`calcularAntiguedad`).
 
-> **Versión actual:** v3.0 — encabezado con escudo oficial, antigüedad efectiva dinámica,
-> acceso a `/admin` separado de la vista pública. Pie: "Ver. 3.0 - by AsincPro · Actualizado ahora".
+> **Versión actual:** v3.1 — filtro "Premios por Vencer (2 meses)" en la vista pública
+> (`esPorVencer` en `js/calc.js`: fecha del próximo premio entre hoy y hoy + 2 meses,
+> inclusive), además de lo de v3.0 (escudo oficial, antigüedad efectiva dinámica,
+> `/admin` separado). Pie: "Ver. 3.1 - by AsincPro · Actualizado ahora".
 
 ## Flujo para actualizar datos
 
