@@ -7,7 +7,9 @@ Guía para trabajar en este proyecto. Léela antes de hacer cambios.
 Sitio web estático que muestra la **antigüedad efectiva y los premios de constancia**
 de los voluntarios de la 9ª Compañía del Cuerpo de Bomberos de Santiago.
 
-- **Vista pública** (`index.html`): cualquiera consulta, busca, filtra y ordena.
+- **Vista pública** (`index.html`): cualquiera consulta, busca, filtra y ordena. Filtros:
+  Todos / Premios Vencidos / **Premios por Vencer (2 meses)** — próximo premio entre hoy y
+  hoy + 2 meses inclusive, ver `esPorVencer` en `js/calc.js` — / Sin Premio Aún / Con Observaciones.
 - **Panel de oficiales** (`admin.html`): login + importar la planilla Excel/CSV. **No** se
   enlaza desde la vista pública; el acceso es directo por URL (`/admin`), de forma separada.
 
