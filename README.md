@@ -59,6 +59,38 @@ insert into public.bomba_admins (email) values ('correo@dominio.cl');
 
 El usuario además debe tener cuenta en Supabase Auth (correo + contraseña) para iniciar sesión.
 
+## Mantenimiento: evitar que Supabase pause el proyecto
+
+En plan gratuito, Supabase pausa los proyectos con **poca actividad**. El criterio
+**no** es "7 días sin ninguna consulta", sino
+[unas pocas consultas de usuario **cada día**](https://supabase.com/docs/guides/platform/free-project-pausing)
+durante la semana previa. Si se pausa, el host deja de resolver en DNS y la app
+muestra `No se pudieron cargar los datos: TypeError: Failed to fetch`; se restaura
+desde el dashboard de Supabase con **Resume project** (no "Upgrade to Pro").
+
+Ocurrió el **22-08-2026**, y la causa fue justamente ese malentendido: el keep-alive
+corría lunes y jueves, con éxito, y aun así no alcanzaba el umbral.
+
+Hay dos pings automáticos, y conviene mantener los dos: se cubren mutuamente.
+
+| Dónde | Frecuencia | Qué cubre |
+|---|---|---|
+| `.github/workflows/keep-alive.yml` | 3 veces al día | Corre en la nube, no depende de ningún equipo encendido |
+| launchd en el Mac del mantenedor | 3 veces al día | Sigue vivo si GitHub deshabilita el workflow |
+
+> **GitHub apaga el workflow por su cuenta** tras 60 días sin commits en el repo
+> (estado `disabled_inactivity`), sin aviso visible aquí. Ya pasó entre el 07-07 y
+> el 09-09-2026. Conviene revisarlo cada tanto:
+>
+> ```bash
+> gh workflow list --repo waldoramos2023-ui/premios-9cia
+> gh workflow enable keep-alive.yml --repo waldoramos2023-ui/premios-9cia
+> ```
+>
+> Modificar archivos bajo `.github/workflows/` requiere un token con scope
+> `workflow` (`gh auth refresh -h github.com -s workflow`); sin él, el push se
+> rechaza.
+
 ## Desarrollo local
 
 ```bash
