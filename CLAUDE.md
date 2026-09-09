@@ -67,18 +67,35 @@ vercel.json       Config de despliegue (cleanUrls, headers)
 - **Proyecto:** `dwzpguzymqzytgkxiumz` — URL `https://dwzpguzymqzytgkxiumz.supabase.co`.
 - **Llaves:** usar **publishable key** (`sb_publishable_...`). Las llaves *legacy* (`anon`
   con formato `eyJ...`) están **deshabilitadas** en este proyecto.
-- **Acceso desde aquí:** el asistente **sí** tiene acceso por MCP a este proyecto (aparece
-  listado como `fondos-rendicion`, pero el `ref` coincide con `js/config.js`). Se puede aplicar
-  migraciones y consultas por MCP — **siempre confirmando antes de escribir** y tocando solo
-  `voluntarios`/`bomba_admins`. También sigue siendo válido entregar SQL para el **SQL Editor**
-  (`supabase/setup-novena-cia.sql`).
+- **Acceso desde aquí:** por MCP la **lectura funciona** — `get_project` y `query_logs`
+  verificados el 09-09-2026 con datos reales, y sirven para diagnosticar. La **escritura no es
+  confiable**: desde la carpeta local de trabajo falla con
+  `NotFoundException: Project not found`, porque el conector está autorizado para la
+  organización *AsincPro* y este proyecto vive en *Novena Cia CBS*. No asumas que puedes migrar
+  por MCP sin comprobarlo antes; el camino seguro es el **SQL Editor** del dashboard
+  (`supabase/setup-novena-cia.sql`), tocando solo `voluntarios`/`bomba_admins` y confirmando
+  antes de escribir.
 - **Seguridad (RLS):** lectura pública; escritura solo para correos en `bomba_admins`.
-- **Keep-alive (evitar pausa por inactividad):** el plan free pausa el proyecto tras ~7 días
-  sin actividad (síntoma: el host deja de resolver en DNS y la vista muestra "No se pudieron
-  cargar los datos"). Para evitarlo, el workflow `.github/workflows/keep-alive.yml` hace una
-  consulta ligera de solo lectura a `voluntarios` **lunes y jueves**. Lee URL/llave desde
-  `js/config.js` (no usa secretos). Si el proyecto igual se pausa, restaurarlo en el dashboard
-  de Supabase (Restore/Resume). Como el proyecto es compartido, una pausa afecta a las tres apps.
+- **Keep-alive (evitar pausa por inactividad):** el plan free pausa los proyectos con **poca
+  actividad**. El criterio **no** es "~7 días sin actividad", sino **unas pocas consultas de
+  usuario cada día** durante la semana previa
+  ([docs](https://supabase.com/docs/guides/platform/free-project-pausing)). Comprobado a la
+  mala: el **22-08-2026 el proyecto se pausó igual**, pese a que este workflow había corrido
+  con éxito el 13, 17 y 20 de agosto bajo el esquema viejo de lunes y jueves. Desde el
+  **09-09-2026** el workflow corre **3 veces al día con 3 consultas** por ejecución (~9
+  diarias). Lee URL/llave desde `js/config.js` (no usa secretos). Síntoma de pausa: el host
+  deja de resolver en DNS y la vista muestra "No se pudieron cargar los datos"; si ocurre,
+  restaurar en el dashboard de Supabase (Restore/Resume). Como el proyecto es compartido, una
+  pausa afecta a las tres apps.
+- **GitHub apaga este workflow por su cuenta.** Tras **60 días sin commits** en el repo,
+  Actions lo deja en `disabled_inactivity`. Ya pasó una vez, entre el 07-07 y el 09-09-2026:
+  dejó de correr sin aviso visible. Verificar y reactivar con:
+  `gh workflow list --repo waldoramos2023-ui/premios-9cia` y
+  `gh workflow enable keep-alive.yml --repo waldoramos2023-ui/premios-9cia`.
+- **Hay un segundo keep-alive**, en el Mac de Waldo (launchd, 3 veces al día). Se cubren
+  mutuamente: Actions sigue vivo con el Mac apagado, y launchd sigue vivo si Actions se
+  deshabilita. Está documentado en el `CLAUDE.md` de la carpeta local de trabajo, que es un
+  archivo **distinto** de éste.
 - **Login admin:** Supabase Auth (correo + contraseña). El usuario debe existir en
   **Authentication** de este proyecto y su correo estar en `bomba_admins`.
   Admins actuales: `waldo.ramos@9.cbs.cl`, `waldo.ramos.2023@gmail.com`.
