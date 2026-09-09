@@ -1,18 +1,30 @@
 # Mantiene "despierto" el proyecto Supabase para que no se pause por inactividad.
-# Supabase (plan free) pausa un proyecto tras ~7 días sin actividad. Este workflow
-# hace una consulta ligera de solo lectura a la tabla `voluntarios` dos veces por
-# semana (lunes y jueves), muy por debajo de ese límite.
+#
+# CRITERIO REAL (docs/guides/platform/free-project-pausing): el plan free NO exige
+# "al menos una consulta cada 7 días", sino UNAS POCAS CONSULTAS DE USUARIO CADA DÍA
+# durante la semana previa. El esquema anterior (lunes y jueves, 1 consulta) quedaba
+# muy por debajo del umbral: el 22-08-2026 el proyecto se pausó igual, pese a que
+# este workflow había corrido con éxito el 13, 17 y 20 de agosto.
+#
+# Por eso ahora corre 3 veces al día con 3 consultas por ejecución (~9 diarias).
 #
 # No necesita secretos: la URL y la "publishable key" se leen de js/config.js, que
 # ya es pública (RLS controla el acceso real). Si algún día cambia el proyecto, basta
 # con actualizar js/config.js y este workflow lo toma automáticamente.
+#
+# OJO: GitHub deshabilita solo los workflows programados tras 60 días sin commits en
+# el repositorio (estado `disabled_inactivity`). Ya pasó una vez. Si el repo queda
+# inactivo, reactivarlo con:
+#   gh workflow enable keep-alive.yml --repo waldoramos2023-ui/premios-9cia
 name: Keep-alive Supabase
 
 on:
   schedule:
-    # Lunes y jueves a las 06:17 UTC (~02:17-03:17 en Chile). Minuto no-cero a propósito:
-    # GitHub recomienda evitar el tope de hora por congestión de los runners.
-    - cron: '17 6 * * 1,4'
+    # Tres veces al día. Minuto no-cero a propósito: GitHub recomienda evitar el
+    # tope de hora por congestión de los runners.
+    - cron: '23 5 * * *'
+    - cron: '23 13 * * *'
+    - cron: '23 20 * * *'
   workflow_dispatch: {} # permite ejecutarlo a mano desde la pestaña Actions
 
 jobs:
@@ -37,19 +49,32 @@ jobs:
 
           echo "Proyecto: $URL"
 
-          # Consulta mínima de solo lectura: toca Postgres a través de PostgREST,
-          # lo que cuenta como actividad y evita la pausa por inactividad.
-          CODE=$(curl -sS -o /tmp/resp.txt -w "%{http_code}" \
-            -H "apikey: $KEY" \
-            -H "Authorization: Bearer $KEY" \
-            "$URL/rest/v1/voluntarios?select=numero&limit=1")
+          # Tres consultas de solo lectura: tocan Postgres a través de PostgREST, que
+          # es lo que Supabase contabiliza como actividad de usuario.
+          consultar() {
+            curl -sS -o /tmp/resp.txt -w "%{http_code}" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY" "$URL/rest/v1/$1"
+          }
 
-          echo "HTTP $CODE"
-          echo "Respuesta: $(cat /tmp/resp.txt)"
+          FALLAS=0
+          for query in \
+            'voluntarios?select=numero&limit=1' \
+            'voluntarios?select=numero,nombre&order=numero&limit=5' \
+            'voluntarios?select=numero&activo=eq.true&limit=3'
+          do
+            CODE=$(consultar "$query")
+            echo "HTTP $CODE  ←  $query"
+            if [ "$CODE" != "200" ]; then
+              echo "::warning::Consulta sin 200 (HTTP $CODE): $query"
+              FALLAS=$((FALLAS + 1))
+            fi
+            sleep 2
+          done
 
-          if [ "$CODE" != "200" ]; then
-            echo "::error::Supabase no respondió 200 (HTTP $CODE). ¿Proyecto pausado o llave inválida?"
+          if [ "$FALLAS" -gt 0 ]; then
+            echo "::error::$FALLAS de 3 consultas fallaron. ¿Proyecto pausado o llave inválida?"
+            echo "Última respuesta: $(cat /tmp/resp.txt)"
             exit 1
           fi
 
-          echo "✓ Supabase activo."
+          echo "✓ Supabase activo (3/3 consultas)."
