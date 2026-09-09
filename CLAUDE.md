@@ -83,7 +83,9 @@ vercel.json       Config de despliegue (cleanUrls, headers)
   mala: el **22-08-2026 el proyecto se pausó igual**, pese a que este workflow había corrido
   con éxito el 13, 17 y 20 de agosto bajo el esquema viejo de lunes y jueves. Desde el
   **09-09-2026** el workflow corre **3 veces al día con 3 consultas** por ejecución (~9
-  diarias). Lee URL/llave desde `js/config.js` (no usa secretos). Síntoma de pausa: el host
+  diarias), verificado ese mismo día con una corrida manual: 3/3 HTTP 200. Sumado al ping del
+  Mac, el proyecto recibe ~18 consultas diarias.
+  Lee URL/llave desde `js/config.js` (no usa secretos). Síntoma de pausa: el host
   deja de resolver en DNS y la vista muestra "No se pudieron cargar los datos"; si ocurre,
   restaurar en el dashboard de Supabase (Restore/Resume). Como el proyecto es compartido, una
   pausa afecta a las tres apps.
@@ -91,7 +93,13 @@ vercel.json       Config de despliegue (cleanUrls, headers)
   Actions lo deja en `disabled_inactivity`. Ya pasó una vez, entre el 07-07 y el 09-09-2026:
   dejó de correr sin aviso visible. Verificar y reactivar con:
   `gh workflow list --repo waldoramos2023-ui/premios-9cia` y
-  `gh workflow enable keep-alive.yml --repo waldoramos2023-ui/premios-9cia`.
+  `gh workflow enable keep-alive.yml --repo waldoramos2023-ui/premios-9cia`. El commit del
+  09-09-2026 reinició el contador, así que el próximo riesgo aparece hacia **noviembre de 2026**.
+- **Para editar archivos bajo `.github/workflows/` hace falta un token con scope `workflow`.**
+  Sin él, el push se rechaza con *"refusing to allow an OAuth App to create or update
+  workflow"*. Se agrega con `gh auth refresh -h github.com -s workflow` (ese endpoint puede
+  devolver un HTTP 502 transitorio: reintentar). Alternativa sin tocar el token: editar el
+  archivo desde la web de GitHub.
 - **Hay un segundo keep-alive**, en el Mac de Waldo (launchd, 3 veces al día). Se cubren
   mutuamente: Actions sigue vivo con el Mac apagado, y launchd sigue vivo si Actions se
   deshabilita. Está documentado en el `CLAUDE.md` de la carpeta local de trabajo, que es un
