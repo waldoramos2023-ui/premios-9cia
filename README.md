@@ -15,6 +15,8 @@ base de datos y autenticación.
 ```
 index.html        Vista pública
 admin.html        Panel de administración (login + importación)
+favicon.ico, apple-touch-icon.png, icons/, manifest.webmanifest
+                  Iconos de la app (pestaña, iOS y Android) y manifest PWA
 css/styles.css    Estilos (diseño original, intacto)
 js/
   config.js       URL y clave pública de Supabase
@@ -24,6 +26,7 @@ js/
   admin.js        Login + importador Excel/CSV
 scripts/
   generar-seed.mjs  Generó la carga inicial desde el HTML original
+  generar-iconos.py Regenera los iconos desde escudo-9a.png (requiere Pillow)
 vercel.json       Configuración de despliegue
 ```
 
@@ -101,13 +104,35 @@ npm run dev      # servidor estático en http://localhost:5173
 
 ## Despliegue en Vercel
 
-1. Subir este repositorio a GitHub.
-2. En Vercel → **Add New Project** → importar el repo.
-3. Framework preset: **Other** (sitio estático, sin build).
-4. Deploy. Listo: la app queda en `https://<tu-proyecto>.vercel.app`.
+El proyecto `app-antiguedad-9a` (equipo `waldo-s-projects1`) **no está conectado a Git**:
+**fusionar un PR en `main` no publica nada**. El despliegue es manual, desde un checkout
+actualizado de `main`:
+
+```bash
+npx vercel --prod --scope waldo-s-projects1
+```
+
+Después de desplegar, comprobar con `curl` que el sitio responde 200 y que los archivos
+nuevos se publicaron (por ejemplo `/favicon.ico` y `/manifest.webmanifest`).
+
+Para montar el sitio desde cero en otra cuenta: en Vercel → **Add New Project** → importar el
+repo, con *Framework preset* **Other** (sitio estático, sin build).
 
 > La clave de Supabase incluida (`config.js`) es la *publishable key*, pensada para
 > exponerse en el navegador. El control de acceso real lo aplica RLS en la base de datos.
+
+## Iconos de la app
+
+La app tiene favicon, icono de iOS (`apple-touch-icon`) y manifest PWA (`display:
+standalone`, con variantes *maskable* para Android). Son un recorte del escudo con el 9,
+derivado de `escudo-9a.png`: a 16-64 px el emblema completo no se lee. Para regenerarlos:
+
+```bash
+python3 scripts/generar-iconos.py    # requiere Pillow; correr desde la raíz del repo
+```
+
+Si un icono "no se ve" tras desplegar, casi siempre es caché del navegador o del sistema
+(Safari, Chrome e iOS lo guardan de forma agresiva); el detalle está en `CLAUDE.md`.
 
 ## Importar voluntarios (panel de oficiales)
 

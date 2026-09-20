@@ -39,6 +39,10 @@ No hay paso de compilación (no build). Es HTML/CSS/JS plano servido como estát
 index.html        Vista pública
 admin.html        Panel de administración (login + importación)
 escudo-9a.png     Escudo oficial (encabezado de ambas secciones)
+favicon.ico       Icono de la pestaña (16/32/48 px)
+apple-touch-icon.png  Icono de iOS (180x180, opaco)
+manifest.webmanifest  Manifest PWA (standalone, theme_color #671512)
+icons/            Iconos PWA 192/512, "any" y "maskable"
 css/styles.css    Estilos (diseño original)
 js/
   config.js       URL + publishable key del proyecto Supabase
@@ -47,7 +51,7 @@ js/
                   (diffYMD, calcularAntiguedad)
   app.js          Vista pública: lee voluntarios, calcula antigüedad y renderiza la tabla
   admin.js        Login + importador Excel/CSV (SheetJS vía CDN)
-scripts/          Generadores de SQL/seed (no se despliegan)
+scripts/          Generadores de SQL/seed e iconos (no se despliegan)
 supabase/         SQL de configuración del proyecto (no se despliega)
 vercel.json       Config de despliegue (cleanUrls, headers)
 ```
@@ -141,20 +145,65 @@ npm run dev      # http://localhost:5173 (o: npx serve, python3 -m http.server)
 
 - Proyecto Vercel: `app-antiguedad-9a` (equipo `waldo-s-projects1`).
 - URL: https://app-antiguedad-9a.vercel.app
-- Redesplegar tras cambios de código:
+- **El despliegue es manual: Vercel NO está conectado a Git.** Fusionar un PR en `main` no
+  publica nada (no hay previews ni deploy automático). Redesplegar tras cambios de código,
+  desde un checkout actualizado de `main`:
 
 ```bash
 npx vercel --prod --scope waldo-s-projects1
 ```
 
+- Un agente de IA no puede correr ese comando (el modo automático bloquea el
+  *Production Deploy*): lo ejecuta el mantenedor en su terminal.
+- En un clon nuevo, `vercel link` descarga un `.env.local` con variables del proyecto y
+  edita `.gitignore`: borrar el archivo (sin leerlo) y revertir `.gitignore` antes de
+  desplegar o hacer commit.
+
 > Tras desplegar, verificar con `curl` que `js/config.js` apunte al proyecto correcto, que
 > la vista muestre la fecha de columna M (p. ej. ACUÑA AGUSTÍN → 13-03-2027) y que `js/app.js`
-> sirva el cálculo en vivo (`calcularAntiguedad`).
+> sirva el cálculo en vivo (`calcularAntiguedad`). Si se tocaron los iconos, comprobar también
+> que `/favicon.ico`, `/apple-touch-icon.png`, `/icons/*.png` respondan 200 y que
+> `/manifest.webmanifest` se sirva como `application/manifest+json`.
 
 > **Versión actual:** v3.1 — filtro "Premios por Vencer (2 meses)" en la vista pública
 > (`esPorVencer` en `js/calc.js`: fecha del próximo premio entre hoy y hoy + 2 meses,
 > inclusive), además de lo de v3.0 (escudo oficial, antigüedad efectiva dinámica,
-> `/admin` separado). Pie: "Ver. 3.1 - by AsincPro · Actualizado ahora".
+> `/admin` separado). Pie: "Ver. 3.1 - by AsincPro · Actualizado ahora" — **el
+> "Actualizado ahora" es texto fijo en `index.html`, no un dato real**: la antigüedad sí se
+> calcula al día de hoy en el navegador, pero la fecha del próximo premio y el resto vienen
+> de la última importación de la planilla.
+
+## Iconos de la app (favicon, iOS y Android)
+
+Publicados el 20-09-2026 (PR #3). Se derivan de `escudo-9a.png` con
+`scripts/generar-iconos.py` (requiere Pillow; correr desde la raíz del repo:
+`python3 scripts/generar-iconos.py`). Vercel no publica `scripts/`.
+
+| Archivo | Uso |
+|---|---|
+| `favicon.ico` | 16, 32 y 48 px (pestaña) |
+| `apple-touch-icon.png` | 180×180 **opaco** (iOS pinta de negro lo transparente) |
+| `icons/icon-192.png`, `icons/icon-512.png` | Android/PWA, propósito `any` |
+| `icons/icon-maskable-192.png`, `icons/icon-maskable-512.png` | Android, logo al 72 % del lienzo, fondo a sangre completa |
+| `manifest.webmanifest` | `display: standalone`, `theme_color: #671512`, `background_color: #FEFEFE` |
+
+Decisiones (y cómo cambiarlas, todas en constantes del script):
+
+- **Recorte del escudo con el 9, no el logo completo** (`ESCUDO`): a 16-64 px el sol, los
+  laureles y el listón se disuelven.
+- **Maskable al 72 %** (`FRACCION_MASKABLE`): con máscara circular el escudo queda completo,
+  pero sus hombros llegan a radio 0,48 del lienzo (dentro del círculo, fuera de la zona
+  segura estricta de 0,40); 0,60 la respeta.
+- **`theme_color` `#671512`** es el rojo medido en el logo; el `--granate` del sitio es
+  `#6B1D3A` (más vino), así que la barra móvil no coincide exacto con el encabezado.
+- **Fondo `#FEFEFE`**: el original es RGB opaco con fondo `(254,254,254)`.
+- **iOS `status-bar-style: default`**: `black-translucent` metería el encabezado bajo el reloj.
+
+Si "no se ve el icono" casi siempre es **caché**: Safari de escritorio muestra una letra gris
+hasta volver a pedir el favicon (Cmd+Q y reabrir, o abrir `/favicon.ico` y recargar); Chrome
+cachea de forma agresiva (incógnito o Cmd+Shift+R); en iOS hay que borrar el acceso directo
+(y, si hace falta, los datos del sitio) y volver a agregarlo; en Android, reinstalar. Antes
+de nada, confirmar que producción esté desplegada.
 
 ## Flujo para actualizar datos
 
