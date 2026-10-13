@@ -205,6 +205,25 @@ cachea de forma agresiva (incógnito o Cmd+Shift+R); en iOS hay que borrar el ac
 (y, si hace falta, los datos del sitio) y volver a agregarlo; en Android, reinstalar. Antes
 de nada, confirmar que producción esté desplegada.
 
+## Móvil, app instalable y sin conexión
+
+- **Responsivo:** en `css/styles.css`, todo dentro de media queries (al final del archivo); el
+  escritorio queda pixel a pixel igual. A ≤ 640 px la tabla pasa a **tarjetas**: `js/app.js`
+  pone `data-label` en cada `<td>` y el CSS lo muestra como etiqueta. Si cambias las columnas
+  de la tabla, actualiza esos `data-label`.
+- **`sw.js`** (raíz): primero la red (máx. 4 s) y, si falla, la copia guardada, para que la
+  app abra sin señal. **Nunca guarda Supabase** (datos y login): sin red se ve el esqueleto con
+  el aviso, no los voluntarios. Solo guarda código de `esm.sh`. Reglas al tocarlo:
+  - **sube `CACHE`** en cada cambio de `sw.js` o de la lista `PRECACHE`;
+  - si agregas o renombras un archivo del sitio, agrégalo a `PRECACHE`;
+  - `vercel.json` lo sirve con `Cache-Control: no-cache`.
+- **`js/pwa.js`** (cargado en `index.html` y `admin.html`): registra el SW, muestra el aviso
+  «Sin conexión» y el aviso de instalación (botón en Android/Chrome; pasos de iOS 26 en Safari).
+  Se esconde si ya está instalada o si lo cerraron hace menos de 7 días.
+- Se probó con Chrome (emulación iPhone 13 y Pixel 7): sin scroll horizontal a 375 px, SW
+  activo, abre con el servidor apagado, sin errores de instalación. **No** se probó en un
+  iPhone ni Android reales.
+
 ## Flujo para actualizar datos
 
 1. Entrar a `/admin` e iniciar sesión.
