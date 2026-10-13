@@ -42,11 +42,13 @@ escudo-9a.png     Escudo oficial (encabezado de ambas secciones)
 favicon.ico       Icono de la pestaña (16/32/48 px)
 apple-touch-icon.png  Icono de iOS (180x180, opaco)
 manifest.webmanifest  Manifest PWA (standalone, theme_color #671512)
+sw.js             Service worker: la app abre sin señal (no guarda Supabase)
 icons/            Iconos PWA 192/512, "any" y "maskable"
 css/styles.css    Estilos (diseño original)
 js/
   config.js       URL + publishable key del proyecto Supabase
   supabase.js     Cliente Supabase (ESM vía CDN esm.sh)
+  pwa.js          Registro del SW, aviso «Sin conexión» y aviso de instalar
   calc.js         Presentación (formato fecha, "vencido") + cálculo de antigüedad en vivo
                   (diffYMD, calcularAntiguedad)
   app.js          Vista pública: lee voluntarios, calcula antigüedad y renderiza la tabla
@@ -98,7 +100,7 @@ vercel.json       Config de despliegue (cleanUrls, headers)
   dejó de correr sin aviso visible. Verificar y reactivar con:
   `gh workflow list --repo waldoramos2023-ui/premios-9cia` y
   `gh workflow enable keep-alive.yml --repo waldoramos2023-ui/premios-9cia`. El commit del
-  09-09-2026 reinició el contador, así que el próximo riesgo aparece hacia **noviembre de 2026**.
+  09-09-2026 reinició el contador, así que el próximo riesgo aparece hacia **noviembre de 2026**; el PR #5 (13-10-2026) lo reinició, así que ahora es **diciembre de 2026**.
 - **Para editar archivos bajo `.github/workflows/` hace falta un token con scope `workflow`.**
   Sin él, el push se rechaza con *"refusing to allow an OAuth App to create or update
   workflow"*. Se agrega con `gh auth refresh -h github.com -s workflow` (ese endpoint puede
@@ -207,6 +209,8 @@ de nada, confirmar que producción esté desplegada.
 
 ## Móvil, app instalable y sin conexión
 
+Publicado el **13-10-2026** (PR #5, `92edc93`); probado en el teléfono de Waldo.
+
 - **Responsivo:** en `css/styles.css`, todo dentro de media queries (al final del archivo); el
   escritorio queda pixel a pixel igual. A ≤ 640 px la tabla pasa a **tarjetas**: `js/app.js`
   pone `data-label` en cada `<td>` y el CSS lo muestra como etiqueta. Si cambias las columnas
@@ -221,8 +225,10 @@ de nada, confirmar que producción esté desplegada.
   «Sin conexión» y el aviso de instalación (botón en Android/Chrome; pasos de iOS 26 en Safari).
   Se esconde si ya está instalada o si lo cerraron hace menos de 7 días.
 - Se probó con Chrome (emulación iPhone 13 y Pixel 7): sin scroll horizontal a 375 px, SW
-  activo, abre con el servidor apagado, sin errores de instalación. **No** se probó en un
-  iPhone ni Android reales.
+  activo, abre con el servidor apagado, sin errores de instalación; en producción, igual.
+  Waldo lo probó en su teléfono. No hay push.
+- **Sin señal no se ve la lista de voluntarios** (el SW no guarda Supabase, a propósito).
+  Pendiente posible: guardar en el dispositivo la última lista con su fecha.
 
 ## Flujo para actualizar datos
 

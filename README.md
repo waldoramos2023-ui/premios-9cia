@@ -17,12 +17,14 @@ index.html        Vista pública
 admin.html        Panel de administración (login + importación)
 favicon.ico, apple-touch-icon.png, icons/, manifest.webmanifest
                   Iconos de la app (pestaña, iOS y Android) y manifest PWA
-css/styles.css    Estilos (diseño original, intacto)
+sw.js             Service worker: la app abre sin señal (no guarda datos de Supabase)
+css/styles.css    Estilos (diseño original; el bloque móvil va al final, en media queries)
 js/
   config.js       URL y clave pública de Supabase
   supabase.js     Cliente Supabase (ESM vía CDN)
   calc.js         Cálculo de antigüedad y premios
   app.js          Lógica de la vista pública
+  pwa.js          Service worker, aviso sin conexión y aviso de instalar
   admin.js        Login + importador Excel/CSV
 scripts/
   generar-seed.mjs  Generó la carga inicial desde el HTML original
