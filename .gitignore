@@ -12,3 +12,7 @@ node_modules/
 scripts/seed.sql
 scripts/update-premios.sql
 supabase/setup-novena-cia.sql
+
+# Datos, respaldos y docs locales (contienen datos personales): NO versionar
+datos/
+.claude/
